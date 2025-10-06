@@ -198,7 +198,7 @@ def get_main_keyboard(lang):
         return ReplyKeyboardMarkup(
             [[KeyboardButton(MESSAGES['fa']['download_prompt_btn'])],
              [KeyboardButton(MESSAGES['fa']['user_account_btn']), KeyboardButton(MESSAGES['fa']['help_btn']), KeyboardButton(MESSAGES['fa']['change_lang_btn'])],
-             [KeyboardButton(MESSAGES['fa']['feedback_btn']), KeyboardButton(MESSAGES['fa']['contact_admin_btn']), KeyboardButton(MESSAGES['fa']['faq_btn'])]],
+             [KeyboardButton(MESSAGES['fa']['feedback_btn']), KeyboardButton(MESSAGES['fa']['contact_admin_btn']), KeyboardButton(MESSAGES['fa']['faq_btn'])],
             resize_keyboard=True,
             one_time_keyboard=False
         )
@@ -206,7 +206,7 @@ def get_main_keyboard(lang):
         return ReplyKeyboardMarkup(
             [[KeyboardButton(MESSAGES['en']['download_prompt_btn'])],
              [KeyboardButton(MESSAGES['en']['user_account_btn']), KeyboardButton(MESSAGES['en']['help_btn']), KeyboardButton(MESSAGES['en']['change_lang_btn'])],
-             [KeyboardButton(MESSAGES['en']['feedback_btn']), KeyboardButton(MESSAGES['en']['contact_admin_btn']), KeyboardButton(MESSAGES['en']['faq_btn'])]],
+             [KeyboardButton(MESSAGES['en']['feedback_btn']), KeyboardButton(MESSAGES['en']['contact_admin_btn']), KeyboardButton(MESSAGES['en']['faq_btn'])],
             resize_keyboard=True,
             one_time_keyboard=False
         )
@@ -1671,8 +1671,8 @@ def main():
     membership_check_handler = CallbackQueryHandler(handle_membership_check, pattern="^check_membership$")
     application.add_handler(membership_check_handler)
 
-    # به‌روزرسانی pattern برای شامل کردن monitoring
-    channel_mgmt_handler = CallbackQueryHandler(handle_channel_management, pattern="^(manage_channels|add_channel|list_channels|remove_channel_|back_to_admin|bot_stats|monitoring)$")
+    # به‌روزرسانی pattern برای شامل کردن monitoring و remove_channel_\d+
+    channel_mgmt_handler = CallbackQueryHandler(handle_channel_management, pattern="^(manage_channels|add_channel|list_channels|remove_channel_\d+|back_to_admin|bot_stats|monitoring)$")
     application.add_handler(channel_mgmt_handler)
 
     channel_info_handler = MessageHandler(filters.TEXT & (~filters.COMMAND), handle_channel_info)
