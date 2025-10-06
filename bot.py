@@ -196,17 +196,21 @@ LANG_KEYBOARD = ReplyKeyboardMarkup(
 def get_main_keyboard(lang):
     if lang == 'fa':
         return ReplyKeyboardMarkup(
-            [[KeyboardButton(MESSAGES['fa']['download_prompt_btn'])],
-             [KeyboardButton(MESSAGES['fa']['user_account_btn']), KeyboardButton(MESSAGES['fa']['help_btn']), KeyboardButton(MESSAGES['fa']['change_lang_btn'])],
-             [KeyboardButton(MESSAGES['fa']['feedback_btn']), KeyboardButton(MESSAGES['fa']['contact_admin_btn']), KeyboardButton(MESSAGES['fa']['faq_btn'])],
+            [
+                [KeyboardButton(MESSAGES['fa']['download_prompt_btn'])],
+                [KeyboardButton(MESSAGES['fa']['user_account_btn']), KeyboardButton(MESSAGES['fa']['help_btn']), KeyboardButton(MESSAGES['fa']['change_lang_btn'])],
+                [KeyboardButton(MESSAGES['fa']['feedback_btn']), KeyboardButton(MESSAGES['fa']['contact_admin_btn']), KeyboardButton(MESSAGES['fa']['faq_btn'])]
+            ],
             resize_keyboard=True,
             one_time_keyboard=False
         )
     else:
         return ReplyKeyboardMarkup(
-            [[KeyboardButton(MESSAGES['en']['download_prompt_btn'])],
-             [KeyboardButton(MESSAGES['en']['user_account_btn']), KeyboardButton(MESSAGES['en']['help_btn']), KeyboardButton(MESSAGES['en']['change_lang_btn'])],
-             [KeyboardButton(MESSAGES['en']['feedback_btn']), KeyboardButton(MESSAGES['en']['contact_admin_btn']), KeyboardButton(MESSAGES['en']['faq_btn'])],
+            [
+                [KeyboardButton(MESSAGES['en']['download_prompt_btn'])],
+                [KeyboardButton(MESSAGES['en']['user_account_btn']), KeyboardButton(MESSAGES['en']['help_btn']), KeyboardButton(MESSAGES['en']['change_lang_btn'])],
+                [KeyboardButton(MESSAGES['en']['feedback_btn']), KeyboardButton(MESSAGES['en']['contact_admin_btn']), KeyboardButton(MESSAGES['en']['faq_btn'])]
+            ],
             resize_keyboard=True,
             one_time_keyboard=False
         )
@@ -1447,9 +1451,7 @@ async def handle_channel_management(update: Update, context: ContextTypes.DEFAUL
         if not channels:
             await query.edit_message_text(
                 MESSAGES['fa']['channel_list_empty'],
-                reply_markup=InlineKeyboardMarkup([[
-                    InlineKeyboardButton("🔙 بازگشت", callback_data="manage_channels")
-                ]])
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 بازگشت", callback_data="manage_channels")]])
             )
         else:
             text = "📋 لیست کانال‌های عضویت اجباری:\n\n"
@@ -1478,9 +1480,7 @@ async def handle_channel_management(update: Update, context: ContextTypes.DEFAUL
             save_channels(channels)
             await query.edit_message_text(
                 f"✅ کانال {removed['channel_name']} حذف شد.",
-                reply_markup=InlineKeyboardMarkup([[
-                    InlineKeyboardButton("🔙 بازگشت", callback_data="list_channels")
-                ]])
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 بازگشت", callback_data="list_channels")]])
             )
     
     elif query.data == "back_to_admin":
@@ -1531,9 +1531,7 @@ async def handle_channel_info(update: Update, context: ContextTypes.DEFAULT_TYPE
     
     await update.message.reply_text(
         MESSAGES['fa']['channel_added'],
-        reply_markup=InlineKeyboardMarkup([[
-            InlineKeyboardButton("🔙 بازگشت به مدیریت کانال‌ها", callback_data="manage_channels")
-        ]])
+        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 بازگشت به مدیریت کانال‌ها", callback_data="manage_channels")]])
     )
     
     context.user_data['awaiting_channel_info'] = False
