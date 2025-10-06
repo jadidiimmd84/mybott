@@ -145,7 +145,8 @@ MESSAGES = {
         'send_channel_info': 'لطفاً اطلاعات کانال را به این فرمت بفرستید:\n\nنام کانال\n@channel_username\nhttps://t.me/channel_username',
         'invalid_channel_format': '❌ فرمت نادرست! لطفاً به فرمت زیر ارسال کنید:\n\nنام کانال\n@channel_username\nhttps://t.me/channel_username',
         'back_to_main': '🔙 بازگشت به منوی اصلی',
-        'monitoring': '🔍 مانیتورینگ عملکرد'
+        'monitoring': '🔍 مانیتورینگ عملکرد',
+        'operation_cancelled': 'عملیات لغو شد.'
     },
     'en': {
         'start': 'Hello, buddy! I\'m a downloader bot. Send me a link to download.',
@@ -179,7 +180,8 @@ MESSAGES = {
         'message_to_admin': '📬 **New Message for Admin**\nFrom: {}\nMessage: {}\nTime: {}\nUser ID: {}',
         'admin_reply_received': '📩 **Reply from Admin**\n\n{}',
         'admin_reply_prompt': 'Please write your reply to user with ID {}:',
-        'monitoring': '🔍 Performance Monitoring'
+        'monitoring': '🔍 Performance Monitoring',
+        'operation_cancelled': 'Operation cancelled.'
     }
 }
 
@@ -528,14 +530,18 @@ async def download_prompt_handler(update: Update, context: ContextTypes.DEFAULT_
 async def feedback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     lang = user_data.get(user_id, {}).get('lang', 'fa')
-    await update.message.reply_text(MESSAGES[lang]['feedback_prompt'])
+    keyboard = [[InlineKeyboardButton("🔙 بازگشت", callback_data="cancel_feedback")]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text(MESSAGES[lang]['feedback_prompt'], reply_markup=reply_markup)
     context.user_data['awaiting_feedback'] = True
 
 # تابع برای درخواست ارتباط با ادمین
 async def contact_admin_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     lang = user_data.get(user_id, {}).get('lang', 'fa')
-    await update.message.reply_text(MESSAGES[lang]['contact_admin_prompt'])
+    keyboard = [[InlineKeyboardButton("🔙 بازگشت", callback_data="cancel_contact")]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text(MESSAGES[lang]['contact_admin_prompt'], reply_markup=reply_markup)
     context.user_data['awaiting_admin_message'] = True
 
 # تابع برای دریافت و پردازش انتقادات و پیشنهادات
@@ -1403,7 +1409,7 @@ async def handle_channel_management(update: Update, context: ContextTypes.DEFAUL
 - کل درخواست‌های دانلود: {report['total_downloads']}
 - دانلودهای موفق: {report['successful_downloads']}
 - دانلودهای ناموفق: {report['failed_downloads']}
-- نرخ موفقیت: {report['success_rate']}%
+- نرخ موفقیت: {report['success_rate']}% 
 
 **زمان پاسخ:**
 - میانگین زمان پاسخ: {report['avg_response_time']} ثانیه
@@ -1532,6 +1538,26 @@ async def handle_channel_info(update: Update, context: ContextTypes.DEFAULT_TYPE
     
     context.user_data['awaiting_channel_info'] = False
 
+# هندلر برای لغو عملیات (بازگشت)
+async def handle_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    
+    user_id = query.from_user.id
+    lang = user_data.get(user_id, {}).get('lang', 'fa')
+    
+    if query.data == 'cancel_feedback':
+        context.user_data['awaiting_feedback'] = False
+    elif query.data == 'cancel_contact':
+        context.user_data['awaiting_admin_message'] = False
+    
+    await query.edit_message_text(MESSAGES[lang]['operation_cancelled'])
+    await context.bot.send_message(
+        chat_id=user_id,
+        text=MESSAGES[lang]['start'],
+        reply_markup=get_main_keyboard(lang)
+    )
+
 # تابع برای محاسبه آمار پیشرفته (برای ادغام با مانیتورینگ)
 def get_advanced_stats():
     global bot_stats, user_data
@@ -1651,6 +1677,10 @@ def main():
 
     channel_info_handler = MessageHandler(filters.TEXT & (~filters.COMMAND), handle_channel_info)
     application.add_handler(channel_info_handler)
+
+    # هندلر جدید برای لغو عملیات
+    cancel_handler = CallbackQueryHandler(handle_cancel, pattern="^(cancel_feedback|cancel_contact)$")
+    application.add_handler(cancel_handler)
     
     instagram_login()
     application.run_polling(drop_pending_updates=True)
