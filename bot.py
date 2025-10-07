@@ -80,12 +80,12 @@ INSTA_PASSWORD = "M@m13841384"
 # دیکشنری سوالات متداول (FAQ)
 FAQ = {
     'fa': {
-        'instagram': 'برای دانلود از اینستاگرام، لینک پست، ریلز یا استوری رو بفرستید. مثلاً: https://www.instagram.com/p/XXXXX',
-        'youtube': 'لینک ویدیو یا پلی‌لیست یوتیوب رو بفرستید. مثلاً: https://www.youtube.com/watch?v=XXXXX',
-        'pinterest': 'لینک پین یا برد پینترست رو بفرستید. مثلاً: https://pin.it/XXXXX یا https://www.pinterest.com/pin/XXXXX',
-        'tiktok': 'لینک ویدیو تیک‌تاک رو بفرستید. مثلاً: https://www.tiktok.com/@user/video/XXXXX',
-        'problems': 'اگه دانلود نشد، مطمئن شید لینک درست باشه. می‌تونید با /contact_admin با ادمین تماس بگیرید.',
-        'quality': 'برای ویدیوها، بعد از ارسال لینک می‌تونید کیفیت (مثل 720p یا 1080p) رو انتخاب کنید.',
+        'instagram': 'برای دانلود از اینستاگرام، لینک پست، ریلز یا استوری را ارسال کنید. مثال: https://www.instagram.com/p/XXXXX',
+        'youtube': 'لینک ویدیو یا پلی‌لیست یوتیوب را ارسال کنید. مثال: https://www.youtube.com/watch?v=XXXXX',
+        'pinterest': 'لینک پین یا برد پینترست را ارسال کنید. مثال: https://pin.it/XXXXX یا https://www.pinterest.com/pin/XXXXX',
+        'tiktok': 'لینک ویدیو تیک‌تاک را ارسال کنید. مثال: https://www.tiktok.com/@user/video/XXXXX',
+        'problems': 'اگر دانلود انجام نشد، اطمینان حاصل کنید که لینک صحیح است. می‌توانید با /contact_admin با مدیر تماس بگیرید.',
+        'quality': 'برای ویدیوها، پس از ارسال لینک می‌توانید کیفیت (مانند 720p یا 1080p) را انتخاب کنید.',
     },
     'en': {
         'instagram': 'To download from Instagram, send the link of a post, reel, or story. Example: https://www.instagram.com/p/XXXXX',
@@ -100,42 +100,42 @@ FAQ = {
 # پیام‌ها برای زبان‌های مختلف
 MESSAGES = {
     'fa': {
-        'start': 'سلام رفیق! من یه ربات دانلودرم. یه لینک برام بفرست تا برات دانلودش کنم.',
-        'help': 'برای شروع کار، کافیه یکی از دکمه‌های زیر رو بزنی:\n\n* **شروع دانلود**: یه لینک از اینستاگرام (پست، ریلز، استوری)، یوتیوب، توییتر/X، SoundCloud، تیک‌تاک یا پینترست بفرست تا برات دانلودش کنم.\n* **راهنما**: همین راهنمایی که الان داری می‌خونی رو دوباره بهت نشون می‌ده.\n* **تغییر زبان**: اگه دوست داری با من انگلیسی صحبت کنی، این دکمه رو بزن.\n* **انتقادات و پیشنهادات**: نظرت یا پیشنهادت رو برام بفرست.\n* **ارتباط با ادمین**: مستقیم با ادمین صحبت کن.\n* **سوالات متداول**: پاسخ به سؤالات رایج درباره دانلود و استفاده از ربات.',
+        'start': 'سلام! من یک ربات دانلودکننده هستم. لطفاً یک لینک ارسال کنید تا برایتان دانلود کنم.',
+        'help': 'برای شروع کار، کافی است یکی از دکمه‌های زیر را فشار دهید:\n\n* **شروع دانلود**: یک لینک از اینستاگرام (پست، ریلز، استوری)، یوتیوب، توییتر/X، SoundCloud، تیک‌تاک یا پینترست ارسال کنید تا برایتان دانلود کنم.\n* **راهنما**: این راهنمایی را که در حال خواندن آن هستید، دوباره نمایش می‌دهد.\n* **تغییر زبان**: اگر مایل به گفتگو به زبان انگلیسی هستید، این دکمه را فشار دهید.\n* **انتقادات و پیشنهادات**: نظر یا پیشنهاد خود را ارسال کنید.\n* **ارتباط با مدیر**: مستقیماً با مدیر ارتباط برقرار کنید.\n* **سوالات متداول**: پاسخ به سؤالات رایج در مورد دانلود و استفاده از ربات.',
         'select_lang': 'لطفاً زبان خود را انتخاب کنید:',
         'lang_set': 'زبان شما به فارسی تغییر یافت.',
-        'processing': 'لینک رو گرفتم، دارم پردازش می‌کنم...',
-        'downloaded': 'دانلود تموم شد.',
-        'error': 'داداش یه مشکلی پیش اومد: {}',
+        'processing': 'لینک دریافت شد، در حال پردازش...',
+        'downloaded': 'دانلود تکمیل شد.',
+        'error': 'متأسفانه مشکلی پیش آمده: {}',
         'help_btn': 'راهنما',
         'change_lang_btn': 'تغییر زبان',
         'download_prompt_btn': 'شروع دانلود',
         'user_account_btn': 'حساب کاربری',
         'feedback_btn': 'انتقادات و پیشنهادات',
-        'contact_admin_btn': 'ارتباط با ادمین',
+        'contact_admin_btn': 'ارتباط با مدیر',
         'faq_btn': 'سوالات متداول',
-        'faq_prompt': 'سؤالت رو بپرس:',
-        'download_prompt': 'لینک مورد نظرت رو بفرست:',
-        'type_choice': 'چی می‌خوای دانلود کنی؟',
-        'watermark_choice': 'با واترمارک باشه یا بدون واترمارک؟',
+        'faq_prompt': 'سؤال خود را مطرح کنید:',
+        'download_prompt': 'لطفاً لینک مورد نظر را ارسال کنید:',
+        'type_choice': 'چه چیزی را می‌خواهید دانلود کنید؟',
+        'watermark_choice': 'با واترمارک یا بدون واترمارک؟',
         'user_stats': '📊 **آمار حساب کاربری شما**\n\nتعداد کل دانلودها: {}\nنوع دانلودها:\n  - ویدیو: {}\n  - صدا: {}\n  - عکس: {}\n\nزبان فعلی: {}',
         'notification_sent': '✅ اطلاعیه با موفقیت به {} کاربر ارسال شد.\n❌ {} کاربر دریافت نکردند (احتمالاً ربات را بلاک کرده‌اند).',
         'notification_usage': 'برای ارسال اطلاعیه از این فرمت استفاده کنید:\n/notify پیام شما اینجا',
-        'admin_only': 'این دستور فقط برای ادمین است.',
+        'admin_only': 'این دستور فقط برای مدیر است.',
         'notification_received': '📢 **اطلاعیه مدیریت**\n\n{}',
-        'feedback_prompt': 'لطفاً انتقاد یا پیشنهادتون رو بنویسید:',
-        'feedback_received': '✅ نظر شما با موفقیت ثبت شد و برای ادمین ارسال خواهد شد.',
-        'contact_admin_prompt': 'پیامت رو برای ادمین بنویس:',
-        'contact_admin_received': '✅ پیام شما برای ادمین ارسال شد.',
+        'feedback_prompt': 'لطفاً انتقاد یا پیشنهاد خود را بنویسید:',
+        'feedback_received': '✅ نظر شما با موفقیت ثبت شد و برای مدیر ارسال خواهد شد.',
+        'contact_admin_prompt': 'پیام خود را برای مدیر بنویسید:',
+        'contact_admin_received': '✅ پیام شما برای مدیر ارسال شد.',
         'feedback_to_admin': '📬 **انتقاد یا پیشنهاد جدید**\nاز: {}\nمتن: {}\nزمان: {}\nکاربر آیدی: {}',
-        'message_to_admin': '📬 **پیام جدید برای ادمین**\nاز: {}\nمتن: {}\nزمان: {}\nکاربر آیدی: {}',
-        'admin_reply_received': '📩 **پاسخ از ادمین**\n\n{}',
-        'admin_reply_prompt': 'لطفا پاسختون رو برای کاربر با آیدی {} بنویسید:',
-        'story_processing': '📲 دارم استوری رو می‌گیرم، صبر کن...',
+        'message_to_admin': '📬 **پیام جدید برای مدیر**\nاز: {}\nمتن: {}\nزمان: {}\nکاربر آیدی: {}',
+        'admin_reply_received': '📩 **پاسخ از مدیر**\n\n{}',
+        'admin_reply_prompt': 'لطفاً پاسخ خود را برای کاربر با آیدی {} بنویسید:',
+        'story_processing': '📲 در حال دریافت استوری، صبر کنید...',
         'story_downloaded': '✅ استوری با موفقیت دانلود شد.',
         'join_required': '❌ برای استفاده از ربات باید در کانال‌های زیر عضو شوید:',
-        'join_check_success': '✅ عضویت شما تایید شد! حالا می‌تونید از ربات استفاده کنید.',
-        'join_check_failed': '❌ هنوز در همه کانال‌ها عضو نشدید. لطفاً ابتدا عضو شوید.',
+        'join_check_success': '✅ عضویت شما تأیید شد! اکنون می‌توانید از ربات استفاده کنید.',
+        'join_check_failed': '❌ هنوز در همه کانال‌ها عضو نشده‌اید. لطفاً ابتدا عضو شوید.',
         'admin_panel': '⚙️ پنل مدیریت',
         'channel_management': '📢 مدیریت کانال‌های عضویت اجباری',
         'add_channel': '➕ افزودن کانال',
@@ -144,20 +144,20 @@ MESSAGES = {
         'channel_list_empty': 'هیچ کانالی ثبت نشده است.',
         'channel_added': '✅ کانال با موفقیت اضافه شد.',
         'channel_removed': '✅ کانال با موفقیت حذف شد.',
-        'send_channel_info': 'لطفاً اطلاعات کانال را به این فرمت بفرستید:\n\nنام کانال\n@channel_username\nhttps://t.me/channel_username',
+        'send_channel_info': 'لطفاً اطلاعات کانال را به این فرمت ارسال کنید:\n\nنام کانال\n@channel_username\nhttps://t.me/channel_username',
         'invalid_channel_format': '❌ فرمت نادرست! لطفاً به فرمت زیر ارسال کنید:\n\nنام کانال\n@channel_username\nhttps://t.me/channel_username',
         'back_to_main': '🔙 بازگشت به منوی اصلی',
         'monitoring': '🔍 مانیتورینگ عملکرد',
         'operation_cancelled': 'عملیات لغو شد.'
     },
     'en': {
-        'start': 'Hello, buddy! I\'m a downloader bot. Send me a link to download.',
-        'help': 'To get started, just press one of the buttons below:\n\n* **Start Download**: Send an Instagram (post, reel, story), YouTube, Twitter/X, SoundCloud, TikTok or Pinterest link to download.\n* **Help**: This will show you the guide you are currently reading again.\n* **Change Language**: If you prefer to talk to me in English, press this button.\n* **Feedback**: Send your feedback or suggestions.\n* **Contact Admin**: Talk directly to the admin.\n* **FAQ**: Answers to common questions about downloading and using the bot.',
+        'start': 'Hello! I am a downloader bot. Please send a link for me to download.',
+        'help': 'To get started, simply press one of the buttons below:\n\n* **Start Download**: Send a link from Instagram (post, reel, story), YouTube, Twitter/X, SoundCloud, TikTok, or Pinterest for download.\n* **Help**: This will display the guide you are currently reading again.\n* **Change Language**: If you prefer to communicate in English, press this button.\n* **Feedback**: Send your feedback or suggestions.\n* **Contact Admin**: Communicate directly with the admin.\n* **FAQ**: Answers to common questions about downloading and using the bot.',
         'select_lang': 'Please select your language:',
         'lang_set': 'Your language has been set to English.',
-        'processing': 'Got the link, processing...',
-        'downloaded': 'Download finished.',
-        'error': 'Dude, something went wrong: {}',
+        'processing': 'Link received, processing...',
+        'downloaded': 'Download completed.',
+        'error': 'Unfortunately, an issue has occurred: {}',
         'help_btn': 'Help',
         'change_lang_btn': 'Change Language',
         'download_prompt_btn': 'Start Download',
@@ -165,14 +165,14 @@ MESSAGES = {
         'feedback_btn': 'Feedback',
         'contact_admin_btn': 'Contact Admin',
         'faq_btn': 'FAQ',
-        'faq_prompt': 'Ask your question:',
-        'download_prompt': 'Please send the link:',
-        'type_choice': 'What do you want to download?',
-        'watermark_choice': 'With or without a watermark?',
-        'user_stats': '📊 **Your Account Stats**\n\nTotal downloads: {}\nDownload types:\n  - Video: {}\n  - Audio: {}\n  - Image: {}\n\nCurrent language: {}',
-        'notification_sent': '✅ Notification successfully sent to {} users.\n❌ {} users did not receive it (probably blocked the bot).',
+        'faq_prompt': 'Please ask your question:',
+        'download_prompt': 'Please send the desired link:',
+        'type_choice': 'What would you like to download?',
+        'watermark_choice': 'With or without watermark?',
+        'user_stats': '📊 **Your Account Statistics**\n\nTotal downloads: {}\nDownload types:\n  - Video: {}\n  - Audio: {}\n  - Image: {}\n\nCurrent language: {}',
+        'notification_sent': '✅ Notification successfully sent to {} users.\n❌ {} users did not receive it (likely blocked the bot).',
         'notification_usage': 'To send a notification, use this format:\n/notify Your message here',
-        'admin_only': 'This command is only for admin.',
+        'admin_only': 'This command is only for the admin.',
         'notification_received': '📢 **Admin Notification**\n\n{}',
         'feedback_prompt': 'Please write your feedback or suggestion:',
         'feedback_received': '✅ Your feedback has been recorded and will be sent to the admin.',
@@ -181,7 +181,7 @@ MESSAGES = {
         'feedback_to_admin': '📬 **New Feedback**\nFrom: {}\nMessage: {}\nTime: {}\nUser ID: {}',
         'message_to_admin': '📬 **New Message for Admin**\nFrom: {}\nMessage: {}\nTime: {}\nUser ID: {}',
         'admin_reply_received': '📩 **Reply from Admin**\n\n{}',
-        'admin_reply_prompt': 'Please write your reply to user with ID {}:',
+        'admin_reply_prompt': 'Please write your reply to the user with ID {}:',
         'monitoring': '🔍 Performance Monitoring',
         'operation_cancelled': 'Operation cancelled.'
     }
@@ -515,7 +515,7 @@ async def handle_faq_choice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
     else:
         await query.edit_message_text(
-            text=MESSAGES[lang]['error'].format("موضوع پیدا نشد."),
+            text=MESSAGES[lang]['error'].format("موضوع مورد نظر یافت نشد."),
             reply_markup=get_faq_back_keyboard(lang)
         )
         await query.message.reply_text(
@@ -637,7 +637,7 @@ async def handle_admin_reply_button(update: Update, context: ContextTypes.DEFAUL
     await query.answer()
 
     if user_id != ADMIN_ID:
-        await query.edit_message_text("این دکمه فقط برای ادمین است.")
+        await query.edit_message_text("این دکمه فقط برای مدیر است.")
         return
         
     try:
@@ -1098,7 +1098,7 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
                 await context.bot.edit_message_text(
                     chat_id=user_id,
                     message_id=sent_message_id,
-                    text="🔄 تشخیص عکس... دوباره تلاش می‌کنم"
+                    text="🔄 در حال تشخیص عکس... تلاش مجدد"
                 )
                 
                 context.job_queue.run_once(
@@ -1271,7 +1271,7 @@ async def handle_watermark_choice(update: Update, context: ContextTypes.DEFAULT_
     await query.answer()
 
     if 'download_url' not in context.user_data:
-        await query.edit_message_text("لینک پیدا نشد. لطفاً دوباره لینک رو بفرست.")
+        await query.edit_message_text("لینک یافت نشد. لطفاً مجدداً لینک را ارسال کنید.")
         return
 
     add_watermark_choice = (query.data == 'watermark_on')
@@ -1376,7 +1376,7 @@ async def handle_channel_management(update: Update, context: ContextTypes.DEFAUL
     user_id = query.from_user.id
     
     if user_id != ADMIN_ID:
-        await query.edit_message_text("این بخش فقط برای ادمین است.")
+        await query.edit_message_text("این بخش فقط برای مدیر است.")
         return
     
     if query.data == "manage_channels":
@@ -1658,7 +1658,7 @@ def main():
     feedback_button_handler = MessageHandler(filters.Regex("^(انتقادات و پیشنهادات|Feedback)$"), feedback_handler)
     application.add_handler(feedback_button_handler)
     
-    contact_admin_button_handler = MessageHandler(filters.Regex("^(ارتباط با ادمین|Contact Admin)$"), contact_admin_handler)
+    contact_admin_button_handler = MessageHandler(filters.Regex("^(ارتباط با مدیر|Contact Admin)$"), contact_admin_handler)
     application.add_handler(contact_admin_button_handler)
     
     faq_button_handler = MessageHandler(filters.Regex("^(سوالات متداول|FAQ)$"), faq_handler)
@@ -1666,7 +1666,7 @@ def main():
 
     message_handlers = MessageHandler(
         filters.TEXT & (~filters.COMMAND) & (
-            ~filters.Regex("^(فارسی|English|راهنما|Help|تغییر زبان|Change Language|شروع دانلود|Start Download|حساب کاربری|User Account|انتقادات و پیشنهادات|Feedback|ارتباط با ادمین|Contact Admin|سوالات متداول|FAQ)$")
+            ~filters.Regex("^(فارسی|English|راهنما|Help|تغییر زبان|Change Language|شروع دانلود|Start Download|حساب کاربری|User Account|انتقادات و پیشنهادات|Feedback|ارتباط با مدیر|Contact Admin|سوالات متداول|FAQ)$")
         ),
         handle_message_dispatcher
     )
