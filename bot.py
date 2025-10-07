@@ -655,7 +655,7 @@ def add_video_watermark(input_file, output_file, text):
     command = [
         'ffmpeg',
         '-i', input_file,
-        '-vf', f"drawtext=text='@{text}':x=(w-text_w)/2:y=H-th-10:fontsize=40:fontcolor=white:shadowcolor=black:shadowx=2:shadowy=2",
+        '-vf', f"drawtext=text=\"@{text}\":x=(w-text_w)/2:y=H-th-10:fontsize=40:fontcolor=white:shadowcolor=black:shadowx=2:shadowy=2",
         '-c:a', 'copy',
         '-y', output_file
     ]
@@ -1433,7 +1433,7 @@ async def handle_channel_management(update: Update, context: ContextTypes.DEFAUL
 
 **منابع سیستم:**
 - مصرف CPU: {report['cpu_usage']}%
-- مصرف حافظه: {report['memory_usage']}%
+- مصرف حافظه: {report['memory_usage'] }%
 
 **کاربران بلاک‌کننده:**
 - تعداد کاربران بلاک‌کننده: {report['blocked_users_count']}
