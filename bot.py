@@ -118,6 +118,7 @@ MESSAGES = {
         'download_prompt': 'لطفاً لینک مورد نظر را ارسال کنید:',
         'type_choice': 'چه چیزی را می‌خواهید دانلود کنید؟',
         'watermark_choice': 'با واترمارک یا بدون واترمارک؟',
+        'quality_choice': 'کیفیت مورد نظر را انتخاب کنید:',
         'user_stats': '📊 **آمار حساب کاربری شما**\n\nتعداد کل دانلودها: {}\nنوع دانلودها:\n  - ویدیو: {}\n  - صدا: {}\n  - عکس: {}\n\nزبان فعلی: {}',
         'notification_sent': '✅ اطلاعیه با موفقیت به {} کاربر ارسال شد.\n❌ {} کاربر دریافت نکردند (احتمالاً ربات را بلاک کرده‌اند).',
         'notification_usage': 'برای ارسال اطلاعیه از این فرمت استفاده کنید:\n/notify پیام شما اینجا',
@@ -169,6 +170,7 @@ MESSAGES = {
         'download_prompt': 'Please send the desired link:',
         'type_choice': 'What would you like to download?',
         'watermark_choice': 'With or without watermark?',
+        'quality_choice': 'Please select the desired quality:',
         'user_stats': '📊 **Your Account Statistics**\n\nTotal downloads: {}\nDownload types:\n  - Video: {}\n  - Audio: {}\n  - Image: {}\n\nCurrent language: {}',
         'notification_sent': '✅ Notification successfully sent to {} users.\n❌ {} users did not receive it (likely blocked the bot).',
         'notification_usage': 'To send a notification, use this format:\n/notify Your message here',
@@ -230,6 +232,16 @@ def get_faq_back_keyboard(lang):
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("بازگشت به سوالات" if lang == 'fa' else "Back to FAQ", callback_data="faq_back")]
     ])
+
+# تابع برای دریافت کیبورد کیفیت
+def get_quality_keyboard(lang):
+    buttons = [
+        [InlineKeyboardButton("360p", callback_data="quality_360")],
+        [InlineKeyboardButton("480p", callback_data="quality_480")],
+        [InlineKeyboardButton("720p", callback_data="quality_720")],
+        [InlineKeyboardButton("1080p", callback_data="quality_1080")]
+    ]
+    return InlineKeyboardMarkup(buttons)
 
 # تابع برای بارگذاری آمار
 def load_stats():
@@ -948,6 +960,7 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
     add_watermark = context.job.data['add_watermark']
     is_audio_only = context.job.data['is_audio_only']
     is_image_only = context.job.data.get('is_image_only', False)
+    quality = context.job.data.get('quality', '720')  # پیش‌فرض 720p
     sent_message_id = context.job.data['message_id']
     
     global user_data
@@ -988,7 +1001,17 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
             ydl_opts['writethumbnail'] = False
         else:
             download_type = 'video'
-            ydl_opts['format'] = 'best'
+            # اعمال کیفیت بر اساس انتخاب کاربر
+            if quality == '360':
+                ydl_opts['format'] = 'worst[height<=360][ext=mp4]'
+            elif quality == '480':
+                ydl_opts['format'] = 'worst[height<=480][ext=mp4]'
+            elif quality == '720':
+                ydl_opts['format'] = 'best[height<=720][ext=mp4]'
+            elif quality == '1080':
+                ydl_opts['format'] = 'best[height<=1080][ext=mp4]'
+            else:
+                ydl_opts['format'] = 'best[height<=720][ext=mp4]'  # پیش‌فرض
 
         if "instagram.com/stories/" in user_url or "instagram.com/reels/" in user_url:
             ydl_opts['noplaylist'] = True
@@ -1237,12 +1260,9 @@ async def handle_type_choice(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     if query.data == 'type_video':
         context.user_data['is_audio_only'] = False
-        keyboard = [
-            [InlineKeyboardButton("با واترمارک", callback_data="watermark_on"),
-             InlineKeyboardButton("بدون واترمارک", callback_data="watermark_off")]
-        ]
-        reply_markup = InlineKeyboardMarkup(keyboard)
-        await query.edit_message_text(MESSAGES[lang]['watermark_choice'], reply_markup=reply_markup)
+        # نمایش کیبورد کیفیت بعد از انتخاب ویدیو
+        keyboard = get_quality_keyboard(lang)
+        await query.edit_message_text(MESSAGES[lang]['quality_choice'], reply_markup=keyboard)
     
     elif query.data == 'type_audio':
         context.user_data['is_audio_only'] = True
@@ -1259,9 +1279,29 @@ async def handle_type_choice(update: Update, context: ContextTypes.DEFAULT_TYPE)
                 'add_watermark': False,
                 'is_audio_only': True,
                 'is_image_only': False,
+                'quality': '720',  # پیش‌فرض برای صدا
                 'message_id': sent_message.message_id
             }
         )
+
+# هندلر برای مدیریت انتخاب کیفیت
+async def handle_quality_choice(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    
+    user_id = query.from_user.id
+    lang = user_data.get(user_id, {}).get('lang', 'fa')
+    
+    quality = query.data.split('_')[1]  # استخراج کیفیت مثل '360'
+    context.user_data['quality'] = quality
+    
+    # حالا کیبورد واترمارک رو نشون بده
+    keyboard = [
+        [InlineKeyboardButton("با واترمارک", callback_data="watermark_on"),
+         InlineKeyboardButton("بدون واترمارک", callback_data="watermark_off")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await query.edit_message_text(MESSAGES[lang]['watermark_choice'], reply_markup=reply_markup)
 
 # هندلر برای مدیریت کلیک روی دکمه‌های واترمارک
 async def handle_watermark_choice(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1280,6 +1320,7 @@ async def handle_watermark_choice(update: Update, context: ContextTypes.DEFAULT_
     
     is_audio_only = context.user_data.get('is_audio_only', False)
     is_image_only = context.user_data.get('is_image_only', False)
+    quality = context.user_data.get('quality', '720')  # کیفیت انتخاب‌شده
 
     sent_message = await query.edit_message_text(MESSAGES[user_data.get(user_id, {}).get('lang', 'fa')]['processing'])
 
@@ -1292,6 +1333,7 @@ async def handle_watermark_choice(update: Update, context: ContextTypes.DEFAULT_
             'add_watermark': add_watermark_choice,
             'is_audio_only': is_audio_only,
             'is_image_only': is_image_only,
+            'quality': quality,
             'message_id': sent_message.message_id
         }
     )
@@ -1674,6 +1716,9 @@ def main():
     
     type_choice_handler = CallbackQueryHandler(handle_type_choice, pattern="^type_")
     application.add_handler(type_choice_handler)
+    
+    quality_choice_handler = CallbackQueryHandler(handle_quality_choice, pattern="^quality_")
+    application.add_handler(quality_choice_handler)
     
     watermark_choice_handler = CallbackQueryHandler(handle_watermark_choice, pattern="^watermark_")
     application.add_handler(watermark_choice_handler)
