@@ -972,7 +972,8 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
     file_names = []
     
     try:
-        ydl_opts = {
+        # تنظیمات پایه ydl_opts بدون format selector برای استخراج info
+        base_ydl_opts = {
             'outtmpl': '%(id)s.%(ext)s', 
             'cookiefile': 'cookies1.txt.txt',
             'geo_bypass_country': 'US',
@@ -984,7 +985,35 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
         }
 
         if 'tiktok.com' in user_url.lower():
-            ydl_opts['extractor_args'] = {'tiktok': {'app_version': 'latest'}}
+            base_ydl_opts['extractor_args'] = {'tiktok': {'app_version': 'latest'}}
+
+        if "instagram.com/stories/" in user_url or "instagram.com/reels/" in user_url:
+            base_ydl_opts['noplaylist'] = True
+        else:
+            base_ydl_opts['noplaylist'] = False
+            
+        if "soundcloud.com/" in user_url and "/sets/" in user_url:
+            base_ydl_opts['noplaylist'] = True
+
+        # استخراج info بدون format selector
+        with yt_dlp.YoutubeDL(base_ydl_opts) as ydl_temp:
+            info_dict = ydl_temp.extract_info(user_url, download=False)
+            
+            if info_dict is None:
+                response_time = time.time() - start_time
+                log_monitoring_data(success=False, response_time=response_time, error="Unable to fetch link info", user_id=user_id)
+                await context.bot.edit_message_text(
+                    chat_id=user_id,
+                    message_id=sent_message_id,
+                    text=MESSAGES[lang]['error'].format("نتوانستم اطلاعات لینک را دریافت کنم.")
+                )
+                return
+        
+        video_id = info_dict.get('id', 'unknown')
+        caption = info_dict.get('description', '')
+
+        # حالا ydl_opts برای دانلود با format مناسب
+        ydl_opts = base_ydl_opts.copy()
 
         if is_audio_only:
             download_type = 'audio'
@@ -1001,149 +1030,125 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
             ydl_opts['writethumbnail'] = False
         else:
             download_type = 'video'
-            # اعمال کیفیت بر اساس انتخاب کاربر
+            # اعمال کیفیت بر اساس انتخاب کاربر - بهبود selector برای جلوگیری از عدم تطابق
             if quality == '360':
-                ydl_opts['format'] = 'worst[height<=360][ext=mp4]'
+                ydl_opts['format'] = 'best[height<=360][ext=mp4]/worst[height<=360][ext=mp4]/best[ext=mp4]'
             elif quality == '480':
-                ydl_opts['format'] = 'worst[height<=480][ext=mp4]'
+                ydl_opts['format'] = 'best[height<=480][ext=mp4]/worst[height<=480][ext=mp4]/best[ext=mp4]'
             elif quality == '720':
-                ydl_opts['format'] = 'best[height<=720][ext=mp4]'
+                ydl_opts['format'] = 'best[height<=720][ext=mp4]/best[ext=mp4]'
             elif quality == '1080':
-                ydl_opts['format'] = 'best[height<=1080][ext=mp4]'
+                ydl_opts['format'] = 'best[height<=1080][ext=mp4]/best[ext=mp4]'
             else:
-                ydl_opts['format'] = 'best[height<=720][ext=mp4]'  # پیش‌فرض
+                ydl_opts['format'] = 'best[height<=720][ext=mp4]/best[ext=mp4]'  # پیش‌فرض با fallback
 
-        if "instagram.com/stories/" in user_url or "instagram.com/reels/" in user_url:
-            ydl_opts['noplaylist'] = True
-        else:
-            ydl_opts['noplaylist'] = False
+        # دانلود با format selector
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([user_url])
+        
+        downloaded_files = find_downloaded_files(video_id)
+        
+        if not downloaded_files:
+            all_files = []
+            for ext in ['mp4', 'mkv', 'webm', 'mp3', 'm4a', 'jpg', 'jpeg', 'png']:
+                all_files.extend(glob.glob(f"*.{ext}"))
             
-        if "soundcloud.com/" in user_url and "/sets/" in user_url:
-            ydl_opts['noplaylist'] = True
+            if all_files:
+                all_files.sort(key=lambda x: os.path.getctime(x), reverse=True)
+                downloaded_files = all_files[:5]
 
-        try:
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                info_dict = ydl.extract_info(user_url, download=False)
+        for file_path in downloaded_files:
+            if os.path.exists(file_path):
+                file_names.append(file_path)
+                output_file_name = file_path
                 
-                if info_dict is None:
+                if add_watermark and not is_audio_only:
+                    if output_file_name.endswith('.mp4'):
+                        watermarked_file_name = f"watermarked_{output_file_name}"
+                        add_video_watermark(output_file_name, watermarked_file_name, "nuvioo_bot")
+                        os.remove(output_file_name)
+                        output_file_name = watermarked_file_name
+                    elif output_file_name.endswith(('.jpg', '.jpeg', '.png')):
+                        watermarked_file_name = f"watermarked_{output_file_name}"
+                        add_image_watermark(output_file_name, watermarked_file_name, "nuvioo_bot")
+                        os.remove(output_file_name)
+                        output_file_name = watermarked_file_name
+
+                try:
+                    with open(output_file_name, 'rb') as media_file:
+                        if output_file_name.endswith(('.mp4', '.mkv', '.webm')):
+                            await context.bot.send_video(chat_id=user_id, video=media_file, caption=caption)
+                        elif output_file_name.endswith(('.jpg', '.jpeg', '.png')):
+                            await context.bot.send_photo(chat_id=user_id, photo=media_file, caption=caption)
+                        elif output_file_name.endswith(('.mp3', '.m4a')):
+                            await context.bot.send_audio(chat_id=user_id, audio=media_file, caption=caption)
+                        else:
+                            await context.bot.send_document(chat_id=user_id, document=media_file, caption=caption)
+                except Exception as send_error:
                     response_time = time.time() - start_time
-                    log_monitoring_data(success=False, response_time=response_time, error="Unable to fetch link info", user_id=user_id)
-                    await context.bot.edit_message_text(
-                        chat_id=user_id,
-                        message_id=sent_message_id,
-                        text=MESSAGES[lang]['error'].format("نتوانستم اطلاعات لینک را دریافت کنم.")
-                    )
-                    return
-                
-                video_id = info_dict.get('id', 'unknown')
-                
-                ydl.download([user_url])
-                
-                caption = info_dict.get('description', '')
+                    log_monitoring_data(success=False, response_time=response_time, error=f"Failed to send file: {send_error}", user_id=user_id)
+                    logger.error(f"خطا در ارسال فایل {output_file_name}: {send_error}")
+                    await context.bot.send_message(chat_id=user_id, text=MESSAGES[lang]['error'].format(f"خطا در ارسال فایل: {send_error}"))
 
-                downloaded_files = find_downloaded_files(video_id)
-                
-                if not downloaded_files:
-                    all_files = []
-                    for ext in ['mp4', 'mkv', 'webm', 'mp3', 'm4a', 'jpg', 'jpeg', 'png']:
-                        all_files.extend(glob.glob(f"*.{ext}"))
-                    
-                    if all_files:
-                        all_files.sort(key=lambda x: os.path.getctime(x), reverse=True)
-                        downloaded_files = all_files[:5]
-
-                for file_path in downloaded_files:
-                    if os.path.exists(file_path):
-                        file_names.append(file_path)
-                        output_file_name = file_path
-                        
-                        if add_watermark and not is_audio_only:
-                            if output_file_name.endswith('.mp4'):
-                                watermarked_file_name = f"watermarked_{output_file_name}"
-                                add_video_watermark(output_file_name, watermarked_file_name, "nuvioo_bot")
-                                os.remove(output_file_name)
-                                output_file_name = watermarked_file_name
-                            elif output_file_name.endswith(('.jpg', '.jpeg', '.png')):
-                                watermarked_file_name = f"watermarked_{output_file_name}"
-                                add_image_watermark(output_file_name, watermarked_file_name, "nuvioo_bot")
-                                os.remove(output_file_name)
-                                output_file_name = watermarked_file_name
-
-                        try:
-                            with open(output_file_name, 'rb') as media_file:
-                                if output_file_name.endswith(('.mp4', '.mkv', '.webm')):
-                                    await context.bot.send_video(chat_id=user_id, video=media_file, caption=caption)
-                                elif output_file_name.endswith(('.jpg', '.jpeg', '.png')):
-                                    await context.bot.send_photo(chat_id=user_id, photo=media_file, caption=caption)
-                                elif output_file_name.endswith(('.mp3', '.m4a')):
-                                    await context.bot.send_audio(chat_id=user_id, audio=media_file, caption=caption)
-                                else:
-                                    await context.bot.send_document(chat_id=user_id, document=media_file, caption=caption)
-                        except Exception as send_error:
-                            response_time = time.time() - start_time
-                            log_monitoring_data(success=False, response_time=response_time, error=f"Failed to send file: {send_error}", user_id=user_id)
-                            logger.error(f"خطا در ارسال فایل {output_file_name}: {send_error}")
-                            await context.bot.send_message(chat_id=user_id, text=MESSAGES[lang]['error'].format(f"خطا در ارسال فایل: {send_error}"))
-
-                if not downloaded_files:
-                    response_time = time.time() - start_time
-                    log_monitoring_data(success=False, response_time=response_time, error="No files downloaded", user_id=user_id)
-                    await context.bot.send_message(chat_id=user_id, text=MESSAGES[lang]['error'].format("هیچ فایلی دانلود نشد."))
-                    return
-
-                response_time = time.time() - start_time
-                log_monitoring_data(success=True, response_time=response_time, user_id=user_id)
-
-                bot_stats['downloads'] += 1
-                save_stats(bot_stats)
-
-                user_data = load_user_data()
-                if 'download_history' not in user_data[user_id]:
-                    user_data[user_id]['download_history'] = []
-                user_data[user_id]['download_history'].append({
-                    'type': download_type,
-                    'timestamp': datetime.now().isoformat()
-                })
-                save_user_data(user_data)
-                
-                await context.bot.edit_message_text(
-                    chat_id=user_id,
-                    message_id=sent_message_id,
-                    text=MESSAGES[lang]['downloaded']
-                )
-                await context.bot.send_message(chat_id=user_id, text=MESSAGES[lang]['start'], reply_markup=get_main_keyboard(lang))
-
-        except yt_dlp.utils.ExtractorError as e:
+        if not downloaded_files:
             response_time = time.time() - start_time
-            error_msg = str(e).lower()
-            if "no video formats found" in error_msg:
-                log_monitoring_data(success=False, response_time=response_time, error=str(e), user_id=user_id)
-                await context.bot.edit_message_text(
-                    chat_id=user_id,
-                    message_id=sent_message_id,
-                    text="🔄 در حال تشخیص عکس... تلاش مجدد"
-                )
-                
-                context.job_queue.run_once(
-                    process_download,
-                    when=2,
-                    data={
-                        'user_id': user_id,
-                        'download_url': user_url,
-                        'add_watermark': add_watermark,
-                        'is_audio_only': False,
-                        'is_image_only': True,
-                        'message_id': sent_message_id
-                    }
-                )
-                return
-            else:
-                log_monitoring_data(success=False, response_time=response_time, error=str(e), user_id=user_id)
-                await context.bot.edit_message_text(
-                    chat_id=user_id,
-                    message_id=sent_message_id,
-                    text=MESSAGES[lang]['error'].format(f"خطای دانلود: {e}")
-                )
+            log_monitoring_data(success=False, response_time=response_time, error="No files downloaded", user_id=user_id)
+            await context.bot.send_message(chat_id=user_id, text=MESSAGES[lang]['error'].format("هیچ فایلی دانلود نشد."))
+            return
+
+        response_time = time.time() - start_time
+        log_monitoring_data(success=True, response_time=response_time, user_id=user_id)
+
+        bot_stats['downloads'] += 1
+        save_stats(bot_stats)
+
+        user_data = load_user_data()
+        if 'download_history' not in user_data[user_id]:
+            user_data[user_id]['download_history'] = []
+        user_data[user_id]['download_history'].append({
+            'type': download_type,
+            'timestamp': datetime.now().isoformat()
+        })
+        save_user_data(user_data)
+        
+        await context.bot.edit_message_text(
+            chat_id=user_id,
+            message_id=sent_message_id,
+            text=MESSAGES[lang]['downloaded']
+        )
+        await context.bot.send_message(chat_id=user_id, text=MESSAGES[lang]['start'], reply_markup=get_main_keyboard(lang))
+
+    except yt_dlp.utils.ExtractorError as e:
+        response_time = time.time() - start_time
+        error_msg = str(e).lower()
+        if "no video formats found" in error_msg:
+            log_monitoring_data(success=False, response_time=response_time, error=str(e), user_id=user_id)
+            await context.bot.edit_message_text(
+                chat_id=user_id,
+                message_id=sent_message_id,
+                text="🔄 در حال تشخیص عکس... تلاش مجدد"
+            )
+            
+            context.job_queue.run_once(
+                process_download,
+                when=2,
+                data={
+                    'user_id': user_id,
+                    'download_url': user_url,
+                    'add_watermark': add_watermark,
+                    'is_audio_only': False,
+                    'is_image_only': True,
+                    'message_id': sent_message_id
+                }
+            )
+            return
+        else:
+            log_monitoring_data(success=False, response_time=response_time, error=str(e), user_id=user_id)
+            await context.bot.edit_message_text(
+                chat_id=user_id,
+                message_id=sent_message_id,
+                text=MESSAGES[lang]['error'].format(f"خطای دانلود: {e}")
+            )
 
     except Exception as e:
         response_time = time.time() - start_time
