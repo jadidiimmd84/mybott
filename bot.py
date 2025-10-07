@@ -80,16 +80,18 @@ INSTA_PASSWORD = "M@m13841384"
 # دیکشنری سوالات متداول (FAQ)
 FAQ = {
     'fa': {
-        'instagram': 'برای دانلود از اینستاگرام، لینک پست، ریلز یا استوری را ارسال نمایید. مثال: https://www.instagram.com/p/XXXXX',
-        'youtube': 'لینک ویدیو یا پلی‌لیست یوتیوب را ارسال نمایید. مثال: https://www.youtube.com/watch?v=XXXXX',
-        'pinterest': 'لینک پین یا برد پینترست را ارسال نمایید. مثال: https://pin.it/XXXXX یا https://www.pinterest.com/pin/XXXXX',
-        'problems': 'در صورت عدم موفقیت در دانلود، لطفاً صحت لینک را بررسی نمایید. می‌توانید از طریق /contact_admin با مدیر تماس بگیرید.',
-        'quality': 'برای ویدیوها، پس از ارسال لینک، می‌توانید کیفیت مورد نظر (مانند 720p یا 1080p) را انتخاب نمایید.',
+        'instagram': 'برای دانلود از اینستاگرام، لینک پست، ریلز یا استوری رو بفرستید. مثلاً: https://www.instagram.com/p/XXXXX',
+        'youtube': 'لینک ویدیو یا پلی‌لیست یوتیوب رو بفرستید. مثلاً: https://www.youtube.com/watch?v=XXXXX',
+        'pinterest': 'لینک پین یا برد پینترست رو بفرستید. مثلاً: https://pin.it/XXXXX یا https://www.pinterest.com/pin/XXXXX',
+        'tiktok': 'لینک ویدیو تیک‌تاک رو بفرستید. مثلاً: https://www.tiktok.com/@user/video/XXXXX',
+        'problems': 'اگه دانلود نشد، مطمئن شید لینک درست باشه. می‌تونید با /contact_admin با ادمین تماس بگیرید.',
+        'quality': 'برای ویدیوها، بعد از ارسال لینک می‌تونید کیفیت (مثل 720p یا 1080p) رو انتخاب کنید.',
     },
     'en': {
         'instagram': 'To download from Instagram, send the link of a post, reel, or story. Example: https://www.instagram.com/p/XXXXX',
         'youtube': 'Send the YouTube video or playlist link. Example: https://www.youtube.com/watch?v=XXXXX',
         'pinterest': 'Send the Pinterest pin or board link. Example: https://pin.it/XXXXX or https://www.pinterest.com/pin/XXXXX',
+        'tiktok': 'Send the TikTok video link. Example: https://www.tiktok.com/@user/video/XXXXX',
         'problems': 'If the download fails, ensure the link is correct. You can contact the admin with /contact_admin.',
         'quality': 'For videos, you can choose the quality (like 720p or 1080p) after sending the link.',
     }
@@ -98,13 +100,13 @@ FAQ = {
 # پیام‌ها برای زبان‌های مختلف
 MESSAGES = {
     'fa': {
-        'start': 'سلام! این ربات برای دانلود محتوا طراحی شده است. لطفاً لینک مورد نظر را ارسال نمایید.',
-        'help': 'برای شروع، یکی از گزینه‌های زیر را انتخاب نمایید:\n\n* **شروع دانلود**: لینک از اینستاگرام (پست، ریلز، استوری)، یوتیوب، توییتر/X، SoundCloud یا پینترست را ارسال نمایید.\n* **راهنما**: راهنمای استفاده را نمایش می‌دهد.\n* **تغییر زبان**: زبان را به انگلیسی تغییر دهید.\n* **انتقادات و پیشنهادات**: نظرات و پیشنهادهای خود را ارسال نمایید.\n* **ارتباط با ادمین**: مستقیماً با مدیر تماس بگیرید.\n* **سوالات متداول**: پاسخ به سوالات رایج در مورد دانلود و استفاده از ربات.',
-        'select_lang': 'لطفاً زبان مورد نظر خود را انتخاب نمایید:',
-        'lang_set': 'زبان شما به فارسی تنظیم شد.',
-        'processing': 'لینک دریافت شد، در حال پردازش...',
-        'downloaded': 'دانلود با موفقیت انجام شد.',
-        'error': 'خطایی رخ داد: {}',
+        'start': 'سلام رفیق! من یه ربات دانلودرم. یه لینک برام بفرست تا برات دانلودش کنم.',
+        'help': 'برای شروع کار، کافیه یکی از دکمه‌های زیر رو بزنی:\n\n* **شروع دانلود**: یه لینک از اینستاگرام (پست، ریلز، استوری)، یوتیوب، توییتر/X، SoundCloud، تیک‌تاک یا پینترست بفرست تا برات دانلودش کنم.\n* **راهنما**: همین راهنمایی که الان داری می‌خونی رو دوباره بهت نشون می‌ده.\n* **تغییر زبان**: اگه دوست داری با من انگلیسی صحبت کنی، این دکمه رو بزن.\n* **انتقادات و پیشنهادات**: نظرت یا پیشنهادت رو برام بفرست.\n* **ارتباط با ادمین**: مستقیم با ادمین صحبت کن.\n* **سوالات متداول**: پاسخ به سؤالات رایج درباره دانلود و استفاده از ربات.',
+        'select_lang': 'لطفاً زبان خود را انتخاب کنید:',
+        'lang_set': 'زبان شما به فارسی تغییر یافت.',
+        'processing': 'لینک رو گرفتم، دارم پردازش می‌کنم...',
+        'downloaded': 'دانلود تموم شد.',
+        'error': 'داداش یه مشکلی پیش اومد: {}',
         'help_btn': 'راهنما',
         'change_lang_btn': 'تغییر زبان',
         'download_prompt_btn': 'شروع دانلود',
@@ -112,28 +114,28 @@ MESSAGES = {
         'feedback_btn': 'انتقادات و پیشنهادات',
         'contact_admin_btn': 'ارتباط با ادمین',
         'faq_btn': 'سوالات متداول',
-        'faq_prompt': 'سوال خود را مطرح نمایید:',
-        'download_prompt': 'لینک مورد نظر را ارسال نمایید:',
-        'type_choice': 'نوع دانلود مورد نظر را انتخاب نمایید؟',
-        'watermark_choice': 'با واترمارک یا بدون واترمارک؟',
+        'faq_prompt': 'سؤالت رو بپرس:',
+        'download_prompt': 'لینک مورد نظرت رو بفرست:',
+        'type_choice': 'چی می‌خوای دانلود کنی؟',
+        'watermark_choice': 'با واترمارک باشه یا بدون واترمارک؟',
         'user_stats': '📊 **آمار حساب کاربری شما**\n\nتعداد کل دانلودها: {}\nنوع دانلودها:\n  - ویدیو: {}\n  - صدا: {}\n  - عکس: {}\n\nزبان فعلی: {}',
-        'notification_sent': '✅ اطلاعیه با موفقیت به {} کاربر ارسال شد.\n❌ {} کاربر دریافت نکردند (احتمالاً ربات را مسدود کرده‌اند).',
-        'notification_usage': 'برای ارسال اطلاعیه از فرمت زیر استفاده نمایید:\n/notify متن اطلاعیه',
-        'admin_only': 'این دستور فقط برای مدیر قابل دسترسی است.',
-        'notification_received': '📢 **اطلاعیه از مدیر**\n\n{}',
-        'feedback_prompt': 'لطفاً انتقاد یا پیشنهاد خود را بنویسید:',
-        'feedback_received': '✅ نظر شما با موفقیت ثبت و برای مدیر ارسال شد.',
-        'contact_admin_prompt': 'پیام خود را برای مدیر بنویسید:',
-        'contact_admin_received': '✅ پیام شما برای مدیر ارسال شد.',
-        'feedback_to_admin': '📬 **انتقاد یا پیشنهاد جدید**\nاز: {}\nمتن: {}\nزمان: {}\nشناسه کاربر: {}',
-        'message_to_admin': '📬 **پیام جدید برای مدیر**\nاز: {}\nمتن: {}\nزمان: {}\nشناسه کاربر: {}',
-        'admin_reply_received': '📩 **پاسخ از مدیر**\n\n{}',
-        'admin_reply_prompt': 'لطفاً پاسخ خود را برای کاربر با شناسه {} بنویسید:',
-        'story_processing': '📲 در حال پردازش استوری...',
+        'notification_sent': '✅ اطلاعیه با موفقیت به {} کاربر ارسال شد.\n❌ {} کاربر دریافت نکردند (احتمالاً ربات را بلاک کرده‌اند).',
+        'notification_usage': 'برای ارسال اطلاعیه از این فرمت استفاده کنید:\n/notify پیام شما اینجا',
+        'admin_only': 'این دستور فقط برای ادمین است.',
+        'notification_received': '📢 **اطلاعیه مدیریت**\n\n{}',
+        'feedback_prompt': 'لطفاً انتقاد یا پیشنهادتون رو بنویسید:',
+        'feedback_received': '✅ نظر شما با موفقیت ثبت شد و برای ادمین ارسال خواهد شد.',
+        'contact_admin_prompt': 'پیامت رو برای ادمین بنویس:',
+        'contact_admin_received': '✅ پیام شما برای ادمین ارسال شد.',
+        'feedback_to_admin': '📬 **انتقاد یا پیشنهاد جدید**\nاز: {}\nمتن: {}\nزمان: {}\nکاربر آیدی: {}',
+        'message_to_admin': '📬 **پیام جدید برای ادمین**\nاز: {}\nمتن: {}\nزمان: {}\nکاربر آیدی: {}',
+        'admin_reply_received': '📩 **پاسخ از ادمین**\n\n{}',
+        'admin_reply_prompt': 'لطفا پاسختون رو برای کاربر با آیدی {} بنویسید:',
+        'story_processing': '📲 دارم استوری رو می‌گیرم، صبر کن...',
         'story_downloaded': '✅ استوری با موفقیت دانلود شد.',
-        'join_required': '❌ برای استفاده از ربات، باید در کانال‌های زیر عضو شوید:',
-        'join_check_success': '✅ عضویت شما تأیید شد! اکنون می‌توانید از ربات استفاده نمایید.',
-        'join_check_failed': '❌ هنوز در همه کانال‌ها عضو نشده‌اید. لطفاً ابتدا عضو شوید.',
+        'join_required': '❌ برای استفاده از ربات باید در کانال‌های زیر عضو شوید:',
+        'join_check_success': '✅ عضویت شما تایید شد! حالا می‌تونید از ربات استفاده کنید.',
+        'join_check_failed': '❌ هنوز در همه کانال‌ها عضو نشدید. لطفاً ابتدا عضو شوید.',
         'admin_panel': '⚙️ پنل مدیریت',
         'channel_management': '📢 مدیریت کانال‌های عضویت اجباری',
         'add_channel': '➕ افزودن کانال',
@@ -142,20 +144,20 @@ MESSAGES = {
         'channel_list_empty': 'هیچ کانالی ثبت نشده است.',
         'channel_added': '✅ کانال با موفقیت اضافه شد.',
         'channel_removed': '✅ کانال با موفقیت حذف شد.',
-        'send_channel_info': 'لطفاً اطلاعات کانال را به فرمت زیر ارسال نمایید:\n\nنام کانال\n@channel_username\nhttps://t.me/channel_username',
-        'invalid_channel_format': '❌ فرمت نادرست! لطفاً به فرمت زیر ارسال نمایید:\n\nنام کانال\n@channel_username\nhttps://t.me/channel_username',
+        'send_channel_info': 'لطفاً اطلاعات کانال را به این فرمت بفرستید:\n\nنام کانال\n@channel_username\nhttps://t.me/channel_username',
+        'invalid_channel_format': '❌ فرمت نادرست! لطفاً به فرمت زیر ارسال کنید:\n\nنام کانال\n@channel_username\nhttps://t.me/channel_username',
         'back_to_main': '🔙 بازگشت به منوی اصلی',
         'monitoring': '🔍 مانیتورینگ عملکرد',
         'operation_cancelled': 'عملیات لغو شد.'
     },
     'en': {
-        'start': 'Hello! This bot is designed for downloading content. Please send the desired link.',
-        'help': 'To get started, select one of the options below:\n\n* **Start Download**: Send a link from Instagram (post, reel, story), YouTube, Twitter/X, SoundCloud, or Pinterest for download.\n* **Help**: Displays the usage guide.\n* **Change Language**: Change the language to English.\n* **Feedback**: Send your feedback or suggestions.\n* **Contact Admin**: Contact the admin directly.\n* **FAQ**: Answers to common questions about downloading and using the bot.',
+        'start': 'Hello, buddy! I\'m a downloader bot. Send me a link to download.',
+        'help': 'To get started, just press one of the buttons below:\n\n* **Start Download**: Send an Instagram (post, reel, story), YouTube, Twitter/X, SoundCloud, TikTok or Pinterest link to download.\n* **Help**: This will show you the guide you are currently reading again.\n* **Change Language**: If you prefer to talk to me in English, press this button.\n* **Feedback**: Send your feedback or suggestions.\n* **Contact Admin**: Talk directly to the admin.\n* **FAQ**: Answers to common questions about downloading and using the bot.',
         'select_lang': 'Please select your language:',
         'lang_set': 'Your language has been set to English.',
-        'processing': 'Link received, processing...',
-        'downloaded': 'Download completed successfully.',
-        'error': 'An error occurred: {}',
+        'processing': 'Got the link, processing...',
+        'downloaded': 'Download finished.',
+        'error': 'Dude, something went wrong: {}',
         'help_btn': 'Help',
         'change_lang_btn': 'Change Language',
         'download_prompt_btn': 'Start Download',
@@ -165,37 +167,21 @@ MESSAGES = {
         'faq_btn': 'FAQ',
         'faq_prompt': 'Ask your question:',
         'download_prompt': 'Please send the link:',
-        'type_choice': 'What type of download do you want?',
-        'watermark_choice': 'With or without watermark?',
-        'user_stats': '📊 **Your Account Statistics**\n\nTotal downloads: {}\nDownload types:\n  - Video: {}\n  - Audio: {}\n  - Image: {}\n\nCurrent language: {}',
+        'type_choice': 'What do you want to download?',
+        'watermark_choice': 'With or without a watermark?',
+        'user_stats': '📊 **Your Account Stats**\n\nTotal downloads: {}\nDownload types:\n  - Video: {}\n  - Audio: {}\n  - Image: {}\n\nCurrent language: {}',
         'notification_sent': '✅ Notification successfully sent to {} users.\n❌ {} users did not receive it (probably blocked the bot).',
         'notification_usage': 'To send a notification, use this format:\n/notify Your message here',
-        'admin_only': 'This command is only available to the admin.',
-        'notification_received': '📢 **Notification from Admin**\n\n{}',
+        'admin_only': 'This command is only for admin.',
+        'notification_received': '📢 **Admin Notification**\n\n{}',
         'feedback_prompt': 'Please write your feedback or suggestion:',
-        'feedback_received': '✅ Your feedback has been successfully recorded and sent to the admin.',
+        'feedback_received': '✅ Your feedback has been recorded and will be sent to the admin.',
         'contact_admin_prompt': 'Write your message for the admin:',
         'contact_admin_received': '✅ Your message has been sent to the admin.',
         'feedback_to_admin': '📬 **New Feedback**\nFrom: {}\nMessage: {}\nTime: {}\nUser ID: {}',
         'message_to_admin': '📬 **New Message for Admin**\nFrom: {}\nMessage: {}\nTime: {}\nUser ID: {}',
         'admin_reply_received': '📩 **Reply from Admin**\n\n{}',
-        'admin_reply_prompt': 'Please write your reply to the user with ID {}:',
-        'story_processing': '📲 Processing the story...',
-        'story_downloaded': '✅ Story downloaded successfully.',
-        'join_required': '❌ To use the bot, you must join the following channels:',
-        'join_check_success': '✅ Your membership has been confirmed! You can now use the bot.',
-        'join_check_failed': '❌ You have not joined all channels yet. Please join first.',
-        'admin_panel': '⚙️ Admin Panel',
-        'channel_management': '📢 Manage Mandatory Membership Channels',
-        'add_channel': '➕ Add Channel',
-        'remove_channel': '➖ Remove Channel',
-        'list_channels': '📋 Channel List',
-        'channel_list_empty': 'No channels are registered.',
-        'channel_added': '✅ Channel added successfully.',
-        'channel_removed': '✅ Channel removed successfully.',
-        'send_channel_info': 'Please send the channel information in this format:\n\nChannel Name\n@channel_username\nhttps://t.me/channel_username',
-        'invalid_channel_format': '❌ Invalid format! Please send in the following format:\n\nChannel Name\n@channel_username\nhttps://t.me/channel_username',
-        'back_to_main': '🔙 Back to Main Menu',
+        'admin_reply_prompt': 'Please write your reply to user with ID {}:',
         'monitoring': '🔍 Performance Monitoring',
         'operation_cancelled': 'Operation cancelled.'
     }
@@ -229,13 +215,15 @@ def get_main_keyboard(lang):
 
 # تابع برای دریافت کیبورد سوالات متداول
 def get_faq_keyboard(lang):
-    return InlineKeyboardMarkup([
+    buttons = [
         [InlineKeyboardButton("دانلود از اینستاگرام" if lang == 'fa' else "Download from Instagram", callback_data="faq_instagram")],
         [InlineKeyboardButton("دانلود از یوتیوب" if lang == 'fa' else "Download from YouTube", callback_data="faq_youtube")],
+        [InlineKeyboardButton("دانلود از تیک‌تاک" if lang == 'fa' else "Download from TikTok", callback_data="faq_tiktok")],
         [InlineKeyboardButton("دانلود از پینترست" if lang == 'fa' else "Download from Pinterest", callback_data="faq_pinterest")],
         [InlineKeyboardButton("مشکلات دانلود" if lang == 'fa' else "Download Problems", callback_data="faq_problems")],
         [InlineKeyboardButton("انتخاب کیفیت" if lang == 'fa' else "Choose Quality", callback_data="faq_quality")]
-    ])
+    ]
+    return InlineKeyboardMarkup(buttons)
 
 # تابع برای دریافت کیبورد بازگشت به FAQ
 def get_faq_back_keyboard(lang):
@@ -756,6 +744,14 @@ def analyze_url_pattern(url):
             'duration': 1
         }
     
+    if 'tiktok.com' in url_lower:
+        return {
+            'is_image': False,
+            'has_video': True,
+            'has_audio': True,
+            'duration': 1
+        }
+    
     if any(ext in url_lower for ext in ['.jpg', '.jpeg', '.png', '.webp', '.gif']):
         return {
             'is_image': True,
@@ -910,6 +906,9 @@ def quick_url_detection(url):
         elif '/stories/' in url_lower:
             return 'unknown'
     
+    if 'tiktok.com' in url_lower:
+        return 'video'
+    
     if any(domain in url_lower for domain in ['youtube.com', 'youtu.be', 'youtube-nocookie.com']):
         return 'video'
     
@@ -970,6 +969,9 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
             'ca_certs': certifi.where(),
             'ignoreerrors': True,
         }
+
+        if 'tiktok.com' in user_url.lower():
+            ydl_opts['extractor_args'] = {'tiktok': {'app_version': 'latest'}}
 
         if is_audio_only:
             download_type = 'audio'
@@ -1362,7 +1364,7 @@ async def admin_panel_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
     ]
     
     await update.message.reply_text(
-        MESSAGES['fa']['admin_panel'],
+        "⚙️ پنل مدیریت ربات",
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
@@ -1379,12 +1381,12 @@ async def handle_channel_management(update: Update, context: ContextTypes.DEFAUL
     
     if query.data == "manage_channels":
         keyboard = [
-            [InlineKeyboardButton(MESSAGES['fa']['add_channel'], callback_data="add_channel")],
-            [InlineKeyboardButton(MESSAGES['fa']['list_channels'], callback_data="list_channels")],
-            [InlineKeyboardButton(MESSAGES['fa']['back_to_main'], callback_data="back_to_admin")]
+            [InlineKeyboardButton("➕ افزودن کانال", callback_data="add_channel")],
+            [InlineKeyboardButton("📋 لیست کانال‌ها", callback_data="list_channels")],
+            [InlineKeyboardButton("🔙 بازگشت", callback_data="back_to_admin")]
         ]
         await query.edit_message_text(
-            MESSAGES['fa']['channel_management'],
+            "📢 مدیریت کانال‌های عضویت اجباری",
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
     
@@ -1409,7 +1411,7 @@ async def handle_channel_management(update: Update, context: ContextTypes.DEFAUL
 - تعداد فیدبک‌ها: {stats['total_feedback']}
 - کانال‌های عضویت: {stats['total_channels']}"""
         
-        keyboard = [[InlineKeyboardButton(MESSAGES['fa']['back_to_main'], callback_data="back_to_admin")]]
+        keyboard = [[InlineKeyboardButton("🔙 بازگشت", callback_data="back_to_admin")]]
         await query.edit_message_text(
             text,
             reply_markup=InlineKeyboardMarkup(keyboard),
@@ -1444,7 +1446,7 @@ async def handle_channel_management(update: Update, context: ContextTypes.DEFAUL
         if not report['recent_errors']:
             text += "- هیچ خطایی ثبت نشده است.\n"
         
-        keyboard = [[InlineKeyboardButton(MESSAGES['fa']['back_to_main'], callback_data="back_to_admin")]]
+        keyboard = [[InlineKeyboardButton("🔙 بازگشت", callback_data="back_to_admin")]]
         await query.edit_message_text(
             text,
             reply_markup=InlineKeyboardMarkup(keyboard),
@@ -1452,7 +1454,7 @@ async def handle_channel_management(update: Update, context: ContextTypes.DEFAUL
         )
     
     elif query.data == "add_channel":
-        keyboard = [[InlineKeyboardButton(MESSAGES['fa']['back_to_main'], callback_data="back_to_manage_channels")]]
+        keyboard = [[InlineKeyboardButton("🔙 بازگشت", callback_data="back_to_manage_channels")]]
         await query.edit_message_text(
             MESSAGES['fa']['send_channel_info'],
             reply_markup=InlineKeyboardMarkup(keyboard)
@@ -1465,7 +1467,7 @@ async def handle_channel_management(update: Update, context: ContextTypes.DEFAUL
             await query.edit_message_text(
                 MESSAGES['fa']['channel_list_empty'],
                 reply_markup=InlineKeyboardMarkup([[
-                    InlineKeyboardButton(MESSAGES['fa']['back_to_main'], callback_data="manage_channels")
+                    InlineKeyboardButton("🔙 بازگشت", callback_data="manage_channels")
                 ]])
             )
         else:
@@ -1480,7 +1482,7 @@ async def handle_channel_management(update: Update, context: ContextTypes.DEFAUL
                     callback_data=f"remove_channel_{i-1}"
                 )])
             
-            buttons.append([InlineKeyboardButton(MESSAGES['fa']['back_to_main'], callback_data="manage_channels")])
+            buttons.append([InlineKeyboardButton("🔙 بازگشت", callback_data="manage_channels")])
             
             await query.edit_message_text(
                 text,
@@ -1494,9 +1496,9 @@ async def handle_channel_management(update: Update, context: ContextTypes.DEFAUL
             removed = channels.pop(index)
             save_channels(channels)
             await query.edit_message_text(
-                MESSAGES['fa']['channel_removed'],
+                f"✅ کانال {removed['channel_name']} حذف شد.",
                 reply_markup=InlineKeyboardMarkup([[
-                    InlineKeyboardButton(MESSAGES['fa']['back_to_main'], callback_data="list_channels")
+                    InlineKeyboardButton("🔙 بازگشت", callback_data="list_channels")
                 ]])
             )
     
@@ -1505,10 +1507,10 @@ async def handle_channel_management(update: Update, context: ContextTypes.DEFAUL
             [InlineKeyboardButton("📢 مدیریت کانال‌ها", callback_data="manage_channels")],
             [InlineKeyboardButton("📊 آمار ربات", callback_data="bot_stats")],
             [InlineKeyboardButton("🔍 مانیتورینگ عملکرد", callback_data="monitoring")],
-            [InlineKeyboardButton(MESSAGES['fa']['back_to_main'], callback_data="back_to_main")]
+            [InlineKeyboardButton("🔙 بازگشت", callback_data="back_to_main")]
         ]
         await query.edit_message_text(
-            MESSAGES['fa']['admin_panel'],
+            "⚙️ پنل مدیریت ربات",
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
     
