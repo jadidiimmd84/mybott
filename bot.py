@@ -196,21 +196,17 @@ LANG_KEYBOARD = ReplyKeyboardMarkup(
 def get_main_keyboard(lang):
     if lang == 'fa':
         return ReplyKeyboardMarkup(
-            [
-                [KeyboardButton(MESSAGES['fa']['download_prompt_btn'])],
-                [KeyboardButton(MESSAGES['fa']['user_account_btn']), KeyboardButton(MESSAGES['fa']['help_btn']), KeyboardButton(MESSAGES['fa']['change_lang_btn'])],
-                [KeyboardButton(MESSAGES['fa']['feedback_btn']), KeyboardButton(MESSAGES['fa']['contact_admin_btn']), KeyboardButton(MESSAGES['fa']['faq_btn'])]
-            ],
+            [[KeyboardButton(MESSAGES['fa']['download_prompt_btn'])],
+             [KeyboardButton(MESSAGES['fa']['user_account_btn']), KeyboardButton(MESSAGES['fa']['help_btn']), KeyboardButton(MESSAGES['fa']['change_lang_btn'])],
+             [KeyboardButton(MESSAGES['fa']['feedback_btn']), KeyboardButton(MESSAGES['fa']['contact_admin_btn']), KeyboardButton(MESSAGES['fa']['faq_btn'])]],
             resize_keyboard=True,
             one_time_keyboard=False
         )
     else:
         return ReplyKeyboardMarkup(
-            [
-                [KeyboardButton(MESSAGES['en']['download_prompt_btn'])],
-                [KeyboardButton(MESSAGES['en']['user_account_btn']), KeyboardButton(MESSAGES['en']['help_btn']), KeyboardButton(MESSAGES['en']['change_lang_btn'])],
-                [KeyboardButton(MESSAGES['en']['feedback_btn']), KeyboardButton(MESSAGES['en']['contact_admin_btn']), KeyboardButton(MESSAGES['en']['faq_btn'])]
-            ],
+            [[KeyboardButton(MESSAGES['en']['download_prompt_btn'])],
+             [KeyboardButton(MESSAGES['en']['user_account_btn']), KeyboardButton(MESSAGES['en']['help_btn']), KeyboardButton(MESSAGES['en']['change_lang_btn'])],
+             [KeyboardButton(MESSAGES['en']['feedback_btn']), KeyboardButton(MESSAGES['en']['contact_admin_btn']), KeyboardButton(MESSAGES['en']['faq_btn'])]],
             resize_keyboard=True,
             one_time_keyboard=False
         )
@@ -234,20 +230,19 @@ def get_faq_back_keyboard(lang):
 # تابع برای بارگذاری آمار
 def load_stats():
     if os.path.exists(STATS_FILE):
-        with open(STATS_FILE, 'r') as f:
-            stats = json.load(f)
-            return stats
+        with open(STATS_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
     return {'users': {}, 'downloads': 0}
 
 # تابع برای ذخیره آمار
 def save_stats(stats):
-    with open(STATS_FILE, 'w') as f:
-        json.dump(stats, f)
+    with open(STATS_FILE, 'w', encoding='utf-8') as f:
+        json.dump(stats, f, ensure_ascii=False, indent=2)
 
 # تابع برای بارگذاری داده‌های مانیتورینگ
 def load_monitoring_data():
     if os.path.exists(MONITORING_FILE):
-        with open(MONITORING_FILE, 'r') as f:
+        with open(MONITORING_FILE, 'r', encoding='utf-8') as f:
             return json.load(f)
     return {
         'successful_downloads': 0,
@@ -259,8 +254,8 @@ def load_monitoring_data():
 
 # تابع برای ذخیره داده‌های مانیتورینگ
 def save_monitoring_data(data):
-    with open(MONITORING_FILE, 'w') as f:
-        json.dump(data, f)
+    with open(MONITORING_FILE, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
 
 # تابع برای ثبت داده‌های مانیتورینگ
 def log_monitoring_data(success=True, response_time=None, error=None, user_id=None):
@@ -329,7 +324,7 @@ def get_monitoring_report():
 # تابع برای بارگذاری اطلاعات کاربران
 def load_user_data():
     if os.path.exists(USER_DATA_FILE):
-        with open(USER_DATA_FILE, 'r') as f:
+        with open(USER_DATA_FILE, 'r', encoding='utf-8') as f:
             data = json.load(f)
             return {int(k): v for k, v in data.items()}
     return {}
@@ -337,20 +332,20 @@ def load_user_data():
 # تابع برای ذخیره اطلاعات کاربران
 def save_user_data(data):
     str_keys_data = {str(k): v for k, v in data.items()}
-    with open(USER_DATA_FILE, 'w') as f:
-        json.dump(str_keys_data, f)
+    with open(USER_DATA_FILE, 'w', encoding='utf-8') as f:
+        json.dump(str_keys_data, f, ensure_ascii=False, indent=2)
 
 # تابع برای بارگذاری انتقادات و پیشنهادات
 def load_feedback():
     if os.path.exists(FEEDBACK_FILE):
-        with open(FEEDBACK_FILE, 'r') as f:
+        with open(FEEDBACK_FILE, 'r', encoding='utf-8') as f:
             return json.load(f)
     return []
 
-# تابع برای ذخیره Criticism and suggestions
+# تابع برای ذخیره انتقادات و پیشنهادات
 def save_feedback(feedback):
-    with open(FEEDBACK_FILE, 'w') as f:
-        json.dump(feedback, f)
+    with open(FEEDBACK_FILE, 'w', encoding='utf-8') as f:
+        json.dump(feedback, f, ensure_ascii=False, indent=2)
 
 bot_stats = load_stats()
 user_data = load_user_data()
@@ -1346,7 +1341,7 @@ async def admin_panel_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
     keyboard = [
         [InlineKeyboardButton("📢 مدیریت کانال‌ها", callback_data="manage_channels")],
         [InlineKeyboardButton("📊 آمار ربات", callback_data="bot_stats")],
-        [InlineKeyboardButton("🔍 مانیتورینگ عملکرد", callback_data="monitoring")],  # گزینه جدید
+        [InlineKeyboardButton("🔍 مانیتورینگ عملکرد", callback_data="monitoring")],
         [InlineKeyboardButton("🔙 بازگشت", callback_data="back_to_main")]
     ]
     
@@ -1441,8 +1436,10 @@ async def handle_channel_management(update: Update, context: ContextTypes.DEFAUL
         )
     
     elif query.data == "add_channel":
+        keyboard = [[InlineKeyboardButton("🔙 بازگشت", callback_data="back_to_manage_channels")]]
         await query.edit_message_text(
-            MESSAGES['fa']['send_channel_info']
+            MESSAGES['fa']['send_channel_info'],
+            reply_markup=InlineKeyboardMarkup(keyboard)
         )
         context.user_data['awaiting_channel_info'] = True
     
@@ -1451,7 +1448,9 @@ async def handle_channel_management(update: Update, context: ContextTypes.DEFAUL
         if not channels:
             await query.edit_message_text(
                 MESSAGES['fa']['channel_list_empty'],
-                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 بازگشت", callback_data="manage_channels")]])
+                reply_markup=InlineKeyboardMarkup([[
+                    InlineKeyboardButton("🔙 بازگشت", callback_data="manage_channels")
+                ]])
             )
         else:
             text = "📋 لیست کانال‌های عضویت اجباری:\n\n"
@@ -1480,7 +1479,9 @@ async def handle_channel_management(update: Update, context: ContextTypes.DEFAUL
             save_channels(channels)
             await query.edit_message_text(
                 f"✅ کانال {removed['channel_name']} حذف شد.",
-                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 بازگشت", callback_data="list_channels")]])
+                reply_markup=InlineKeyboardMarkup([[
+                    InlineKeyboardButton("🔙 بازگشت", callback_data="list_channels")
+                ]])
             )
     
     elif query.data == "back_to_admin":
@@ -1497,6 +1498,18 @@ async def handle_channel_management(update: Update, context: ContextTypes.DEFAUL
     
     elif query.data == "back_to_main":
         await query.edit_message_text(MESSAGES['fa']['back_to_main'])
+    
+    elif query.data == "back_to_manage_channels":
+        context.user_data['awaiting_channel_info'] = False
+        keyboard = [
+            [InlineKeyboardButton("➕ افزودن کانال", callback_data="add_channel")],
+            [InlineKeyboardButton("📋 لیست کانال‌ها", callback_data="list_channels")],
+            [InlineKeyboardButton("🔙 بازگشت", callback_data="back_to_admin")]
+        ]
+        await query.edit_message_text(
+            "📢 مدیریت کانال‌های عضویت اجباری",
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
 
 # هندلر دریافت اطلاعات کانال
 async def handle_channel_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1531,7 +1544,9 @@ async def handle_channel_info(update: Update, context: ContextTypes.DEFAULT_TYPE
     
     await update.message.reply_text(
         MESSAGES['fa']['channel_added'],
-        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 بازگشت به مدیریت کانال‌ها", callback_data="manage_channels")]])
+        reply_markup=InlineKeyboardMarkup([[
+            InlineKeyboardButton("🔙 بازگشت به مدیریت کانال‌ها", callback_data="manage_channels")
+        ]])
     )
     
     context.user_data['awaiting_channel_info'] = False
@@ -1669,8 +1684,8 @@ def main():
     membership_check_handler = CallbackQueryHandler(handle_membership_check, pattern="^check_membership$")
     application.add_handler(membership_check_handler)
 
-    # به‌روزرسانی pattern برای شامل کردن monitoring و remove_channel_\d+
-    channel_mgmt_handler = CallbackQueryHandler(handle_channel_management, pattern="^(manage_channels|add_channel|list_channels|remove_channel_\d+|back_to_admin|bot_stats|monitoring)$")
+    # به‌روزرسانی pattern برای شامل کردن monitoring و back_to_manage_channels
+    channel_mgmt_handler = CallbackQueryHandler(handle_channel_management, pattern="^(manage_channels|add_channel|list_channels|remove_channel_\d+|back_to_admin|bot_stats|monitoring|back_to_manage_channels)$")
     application.add_handler(channel_mgmt_handler)
 
     channel_info_handler = MessageHandler(filters.TEXT & (~filters.COMMAND), handle_channel_info)
