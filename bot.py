@@ -952,38 +952,6 @@ def instagram_login():
         logger.error("❌ کوکی نداری. باید از مرورگر کوکی بگیری (cookies1.txt): %s", e)
     return cl
 
-# تابع انتخاب فرمت بر اساس کیفیت
-def select_format_by_quality(formats, quality):
-    quality_map = {
-        '360': 360,
-        '480': 480,
-        '720': 720,
-        '1080': 1080
-    }
-    target_height = quality_map.get(quality, 720)
-    
-    # فیلتر فرمت‌های ویدیو با height <= target و ext=mp4
-    video_formats = [fmt for fmt in formats if fmt.get('vcodec') != 'none' and fmt.get('ext') == 'mp4' and fmt.get('height') and fmt.get('height') <= target_height]
-    
-    if video_formats:
-        # انتخاب بهترین (بالاترین height یا bitrate)
-        video_formats.sort(key=lambda f: (f.get('height', 0), f.get('tbr', 0)), reverse=True)
-        return video_formats[0]['format_id']
-    
-    # اگر فرمت مناسب پیدا نشد، بهترین فرمت mp4 را انتخاب کن
-    all_video_formats = [fmt for fmt in formats if fmt.get('vcodec') != 'none' and fmt.get('ext') == 'mp4']
-    if all_video_formats:
-        all_video_formats.sort(key=lambda f: (f.get('height', 0), f.get('tbr', 0)), reverse=True)
-        return all_video_formats[0]['format_id']
-    
-    # اگر mp4 نبود، بهترین ویدیو
-    video_formats_any = [fmt for fmt in formats if fmt.get('vcodec') != 'none']
-    if video_formats_any:
-        video_formats_any.sort(key=lambda f: (f.get('height', 0), f.get('tbr', 0)), reverse=True)
-        return video_formats_any[0]['format_id']
-    
-    return None
-
 # تابع اصلی دانلود
 async def process_download(context: ContextTypes.DEFAULT_TYPE):
     start_time = time.time()  # ثبت زمان شروع
@@ -1062,14 +1030,19 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
             ydl_opts['writethumbnail'] = False
         else:
             download_type = 'video'
-            # انتخاب فرمت بر اساس کیفیت
-            formats = info_dict.get('formats', [])
-            selected_format_id = select_format_by_quality(formats, quality)
-            if selected_format_id:
-                ydl_opts['format'] = selected_format_id
-                logger.info(f"Selected format for {quality}: {selected_format_id}")
-            else:
-                ydl_opts['format'] = 'best[height<=720]/best'  # fallback
+            # اعمال selector بهبود یافته برای کیفیت
+            if quality == '360':
+                ydl_opts['format'] = 'worst[height<=360][ext=mp4]/best[height<=360][ext=mp4]/worst[ext=mp4]/best'
+                logger.info(f"Using low quality selector for 360p: worst[height<=360][ext=mp4]/...")
+            elif quality == '480':
+                ydl_opts['format'] = 'worst[height<=480][ext=mp4]/best[height<=480][ext=mp4]/worst[ext=mp4]/best'
+                logger.info(f"Using low-medium quality selector for 480p: worst[height<=480][ext=mp4]/...")
+            elif quality == '720':
+                ydl_opts['format'] = 'best[height<=720][ext=mp4]/best[ext=mp4]/best'
+                logger.info(f"Using medium quality selector for 720p: best[height<=720][ext=mp4]/...")
+            elif quality == '1080':
+                ydl_opts['format'] = 'best[height<=1080][ext=mp4]/best[ext=mp4]/best'
+                logger.info(f"Using high quality selector for 1080p: best[height<=1080][ext=mp4]/...")
 
         # دانلود با format selector
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
