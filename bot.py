@@ -1030,19 +1030,15 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
             ydl_opts['writethumbnail'] = False
         else:
             download_type = 'video'
-            # اعمال selector بهبود یافته برای کیفیت
-            if quality == '360':
-                ydl_opts['format'] = 'worst[height<=360][ext=mp4]/best[height<=360][ext=mp4]/worst[ext=mp4]/best'
-                logger.info(f"Using low quality selector for 360p: worst[height<=360][ext=mp4]/...")
-            elif quality == '480':
-                ydl_opts['format'] = 'worst[height<=480][ext=mp4]/best[height<=480][ext=mp4]/worst[ext=mp4]/best'
-                logger.info(f"Using low-medium quality selector for 480p: worst[height<=480][ext=mp4]/...")
-            elif quality == '720':
-                ydl_opts['format'] = 'best[height<=720][ext=mp4]/best[ext=mp4]/best'
-                logger.info(f"Using medium quality selector for 720p: best[height<=720][ext=mp4]/...")
-            elif quality == '1080':
-                ydl_opts['format'] = 'best[height<=1080][ext=mp4]/best[ext=mp4]/best'
-                logger.info(f"Using high quality selector for 1080p: best[height<=1080][ext=mp4]/...")
+           if quality == '360':
+    ydl_opts['format'] = 'bestvideo[height<=360]+bestaudio/best[height<=360]/worstvideo[height<=360]+worstaudio'
+elif quality == '480':
+    ydl_opts['format'] = 'bestvideo[height<=480]+bestaudio/best[height<=480]/worstvideo[height<=480]+worstaudio'
+elif quality == '720':
+    ydl_opts['format'] = 'bestvideo[height<=720]+bestaudio/best[height<=720]/bestvideo[height<=720]/best'
+elif quality == '1080':
+    ydl_opts['format'] = 'bestvideo[height<=1080]+bestaudio/best[height<=1080]/bestvideo[height<=1080]/best'
+
 
         # دانلود با format selector
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
