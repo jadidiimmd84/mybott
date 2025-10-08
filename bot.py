@@ -118,7 +118,6 @@ MESSAGES = {
         'download_prompt': 'لطفاً لینک مورد نظر را ارسال کنید:',
         'type_choice': 'چه چیزی را می‌خواهید دانلود کنید؟',
         'watermark_choice': 'با واترمارک یا بدون واترمارک؟',
-        'quality_choice': 'کیفیت مورد نظر را انتخاب کنید:',
         'user_stats': '📊 **آمار حساب کاربری شما**\n\nتعداد کل دانلودها: {}\nنوع دانلودها:\n  - ویدیو: {}\n  - صدا: {}\n  - عکس: {}\n\nزبان فعلی: {}',
         'notification_sent': '✅ اطلاعیه با موفقیت به {} کاربر ارسال شد.\n❌ {} کاربر دریافت نکردند (احتمالاً ربات را بلاک کرده‌اند).',
         'notification_usage': 'برای ارسال اطلاعیه از این فرمت استفاده کنید:\n/notify پیام شما اینجا',
@@ -170,7 +169,6 @@ MESSAGES = {
         'download_prompt': 'Please send the desired link:',
         'type_choice': 'What would you like to download?',
         'watermark_choice': 'With or without watermark?',
-        'quality_choice': 'Please select the desired quality:',
         'user_stats': '📊 **Your Account Statistics**\n\nTotal downloads: {}\nDownload types:\n  - Video: {}\n  - Audio: {}\n  - Image: {}\n\nCurrent language: {}',
         'notification_sent': '✅ Notification successfully sent to {} users.\n❌ {} users did not receive it (likely blocked the bot).',
         'notification_usage': 'To send a notification, use this format:\n/notify Your message here',
@@ -232,16 +230,6 @@ def get_faq_back_keyboard(lang):
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("بازگشت به سوالات" if lang == 'fa' else "Back to FAQ", callback_data="faq_back")]
     ])
-
-# تابع برای دریافت کیبورد کیفیت
-def get_quality_keyboard(lang):
-    buttons = [
-        [InlineKeyboardButton("360p", callback_data="quality_360")],
-        [InlineKeyboardButton("480p", callback_data="quality_480")],
-        [InlineKeyboardButton("720p", callback_data="quality_720")],
-        [InlineKeyboardButton("1080p", callback_data="quality_1080")]
-    ]
-    return InlineKeyboardMarkup(buttons)
 
 # تابع برای بارگذاری آمار
 def load_stats():
@@ -959,7 +947,6 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
     add_watermark = context.job.data['add_watermark']
     is_audio_only = context.job.data['is_audio_only']
     is_image_only = context.job.data.get('is_image_only', False)
-    quality = context.job.data.get('quality', '720')  # پیش‌فرض 720p
     sent_message_id = context.job.data['message_id']
     
     global user_data
@@ -1029,19 +1016,8 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
             ydl_opts['writethumbnail'] = False
         else:
             download_type = 'video'
-            # selector بهبود یافته برای کیفیت - استفاده از best در محدوده height
-            if quality == '360':
-                ydl_opts['format'] = 'best[height<=360][ext=mp4]/best[height<=360]/best[ext=mp4]/best'
-                logger.info(f"Using 360p selector: best[height<=360][ext=mp4]/best[height<=360]/best[ext=mp4]/best")
-            elif quality == '480':
-                ydl_opts['format'] = 'best[height<=480][ext=mp4]/best[height<=480]/best[ext=mp4]/best'
-                logger.info(f"Using 480p selector: best[height<=480][ext=mp4]/best[height<=480]/best[ext=mp4]/best")
-            elif quality == '720':
-                ydl_opts['format'] = 'best[height<=720][ext=mp4]/best[height<=720]/best[ext=mp4]/best'
-                logger.info(f"Using 720p selector: best[height<=720][ext=mp4]/best[height<=720]/best[ext=mp4]/best")
-            elif quality == '1080':
-                ydl_opts['format'] = 'best[height<=1080][ext=mp4]/best[height<=1080]/best[ext=mp4]/best'
-                logger.info(f"Using 1080p selector: best[height<=1080][ext=mp4]/best[height<=1080]/best[ext=mp4]/best")
+            ydl_opts['format'] = 'best[ext=mp4]/best'
+            logger.info("Using default best quality")
 
         # دانلود با format selector
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -1266,9 +1242,13 @@ async def handle_type_choice(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     if query.data == 'type_video':
         context.user_data['is_audio_only'] = False
-        # نمایش کیبورد کیفیت بعد از انتخاب ویدیو
-        keyboard = get_quality_keyboard(lang)
-        await query.edit_message_text(MESSAGES[lang]['quality_choice'], reply_markup=keyboard)
+        # مستقیم به watermark_choice برو
+        keyboard = [
+            [InlineKeyboardButton("با واترمارک", callback_data="watermark_on"),
+             InlineKeyboardButton("بدون واترمارک", callback_data="watermark_off")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await query.edit_message_text(MESSAGES[lang]['watermark_choice'], reply_markup=reply_markup)
     
     elif query.data == 'type_audio':
         context.user_data['is_audio_only'] = True
@@ -1285,29 +1265,9 @@ async def handle_type_choice(update: Update, context: ContextTypes.DEFAULT_TYPE)
                 'add_watermark': False,
                 'is_audio_only': True,
                 'is_image_only': False,
-                'quality': '720',  # پیش‌فرض برای صدا
                 'message_id': sent_message.message_id
             }
         )
-
-# هندلر برای مدیریت انتخاب کیفیت
-async def handle_quality_choice(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    
-    user_id = query.from_user.id
-    lang = user_data.get(user_id, {}).get('lang', 'fa')
-    
-    quality = query.data.split('_')[1]  # استخراج کیفیت مثل '360'
-    context.user_data['quality'] = quality
-    
-    # حالا کیبورد واترمارک رو نشون بده
-    keyboard = [
-        [InlineKeyboardButton("با واترمارک", callback_data="watermark_on"),
-         InlineKeyboardButton("بدون واترمارک", callback_data="watermark_off")]
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    await query.edit_message_text(MESSAGES[lang]['watermark_choice'], reply_markup=reply_markup)
 
 # هندلر برای مدیریت کلیک روی دکمه‌های واترمارک
 async def handle_watermark_choice(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1326,7 +1286,6 @@ async def handle_watermark_choice(update: Update, context: ContextTypes.DEFAULT_
     
     is_audio_only = context.user_data.get('is_audio_only', False)
     is_image_only = context.user_data.get('is_image_only', False)
-    quality = context.user_data.get('quality', '720')  # کیفیت انتخاب‌شده
 
     sent_message = await query.edit_message_text(MESSAGES[user_data.get(user_id, {}).get('lang', 'fa')]['processing'])
 
@@ -1339,7 +1298,6 @@ async def handle_watermark_choice(update: Update, context: ContextTypes.DEFAULT_
             'add_watermark': add_watermark_choice,
             'is_audio_only': is_audio_only,
             'is_image_only': is_image_only,
-            'quality': quality,
             'message_id': sent_message.message_id
         }
     )
@@ -1438,6 +1396,17 @@ async def handle_channel_management(update: Update, context: ContextTypes.DEFAUL
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
     
+    elif query.data == "back_to_manage_channels":
+        keyboard = [
+            [InlineKeyboardButton("➕ افزودن کانال", callback_data="add_channel")],
+            [InlineKeyboardButton("📋 لیست کانال‌ها", callback_data="list_channels")],
+            [InlineKeyboardButton("🔙 بازگشت", callback_data="back_to_admin")]
+        ]
+        await query.edit_message_text(
+            "📢 مدیریت کانال‌های عضویت اجباری",
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+    
     elif query.data == "bot_stats":
         stats = get_advanced_stats()
         text = f"""📊 **آمار پیشرفته ربات** (به‌روزرسانی: {datetime.now().strftime('%Y/%m/%d %H:%M')})
@@ -1481,7 +1450,7 @@ async def handle_channel_management(update: Update, context: ContextTypes.DEFAUL
 
 **منابع سیستم:**
 - مصرف CPU: {report['cpu_usage']}%
-- مصرف حافظه: {report['memory_usage']}%
+- مصرف حافظه: {report['memory_usage'] }%
 
 **کاربران بلاک‌کننده:**
 - تعداد کاربران بلاک‌کننده: {report['blocked_users_count']}
@@ -1514,9 +1483,7 @@ async def handle_channel_management(update: Update, context: ContextTypes.DEFAUL
         if not channels:
             await query.edit_message_text(
                 MESSAGES['fa']['channel_list_empty'],
-                reply_markup=InlineKeyboardMarkup([[
-                    InlineKeyboardButton("🔙 بازگشت", callback_data="manage_channels")
-                ]])
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 بازگشت", callback_data="manage_channels")]])
             )
         else:
             text = "📋 لیست کانال‌های عضویت اجباری:\n\n"
@@ -1545,9 +1512,7 @@ async def handle_channel_management(update: Update, context: ContextTypes.DEFAUL
             save_channels(channels)
             await query.edit_message_text(
                 f"✅ کانال {removed['channel_name']} حذف شد.",
-                reply_markup=InlineKeyboardMarkup([[
-                    InlineKeyboardButton("🔙 بازگشت", callback_data="list_channels")
-                ]])
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 بازگشت", callback_data="list_channels")]])
             )
     
     elif query.data == "back_to_admin":
@@ -1598,9 +1563,7 @@ async def handle_channel_info(update: Update, context: ContextTypes.DEFAULT_TYPE
     
     await update.message.reply_text(
         MESSAGES['fa']['channel_added'],
-        reply_markup=InlineKeyboardMarkup([[
-            InlineKeyboardButton("🔙 بازگشت به مدیریت کانال‌ها", callback_data="manage_channels")
-        ]])
+        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 بازگشت به مدیریت کانال‌ها", callback_data="manage_channels")]])
     )
     
     context.user_data['awaiting_channel_info'] = False
@@ -1723,9 +1686,6 @@ def main():
     type_choice_handler = CallbackQueryHandler(handle_type_choice, pattern="^type_")
     application.add_handler(type_choice_handler)
     
-    quality_choice_handler = CallbackQueryHandler(handle_quality_choice, pattern="^quality_")
-    application.add_handler(quality_choice_handler)
-    
     watermark_choice_handler = CallbackQueryHandler(handle_watermark_choice, pattern="^watermark_")
     application.add_handler(watermark_choice_handler)
     
@@ -1741,8 +1701,8 @@ def main():
     membership_check_handler = CallbackQueryHandler(handle_membership_check, pattern="^check_membership$")
     application.add_handler(membership_check_handler)
 
-    # به‌روزرسانی pattern برای شامل کردن monitoring و back_to_manage_channels
-    channel_mgmt_handler = CallbackQueryHandler(handle_channel_management, pattern="^(manage_channels|add_channel|list_channels|remove_channel_\d+|back_to_admin|bot_stats|monitoring|back_to_manage_channels)$")
+    # به‌روزرسانی pattern برای شامل کردن back_to_manage_channels
+    channel_mgmt_handler = CallbackQueryHandler(handle_channel_management, pattern="^(manage_channels|add_channel|list_channels|remove_channel_\d+|back_to_admin|bot_stats|monitoring|back_to_main|back_to_manage_channels)$")
     application.add_handler(channel_mgmt_handler)
 
     channel_info_handler = MessageHandler(filters.TEXT & (~filters.COMMAND), handle_channel_info)
