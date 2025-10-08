@@ -801,7 +801,7 @@ def detect_content_type(url):
         ydl_opts = {
             'quiet': True,
             'no_warnings': True,
-            'cookiefile': '',
+            # 'cookiefile': '',  # حذف شده برای جلوگیری از خطا
             'nocheckcertificate': True,
             'extract_flat': False,
             'ignoreerrors': True,
@@ -975,7 +975,7 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
         # تنظیمات پایه ydl_opts بدون format selector برای استخراج info
         base_ydl_opts = {
             'outtmpl': '%(id)s.%(ext)s', 
-            'cookiefile': 'cookies1.txt.txt',
+            'cookiefile': 'cookies1.txt' if os.path.exists('cookies1.txt') else None,
             'geo_bypass_country': 'US',
             'nocheckcertificate': True,
             'retries': 5,
