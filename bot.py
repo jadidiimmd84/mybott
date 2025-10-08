@@ -791,8 +791,9 @@ def analyze_url_pattern(url):
 def detect_content_type(url):
     try:
         ydl_opts = {
-            'quiet': True,
-            'no_warnings': True,
+            'quiet': False,  # برای دیباگ
+            'verbose': True,  # برای دیباگ
+            'no_warnings': False,
             'nocheckcertificate': True,
             'extract_flat': False,
             'ignoreerrors': True,
@@ -972,6 +973,8 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
             'fragment_retries': 5,
             'ca_certs': certifi.where(),
             'ignoreerrors': True,
+            'quiet': False,  # برای دیباگ
+            'verbose': True,  # برای دیباگ
         }
 
         if 'tiktok.com' in user_url.lower():
