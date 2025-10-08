@@ -366,6 +366,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_data = load_user_data()
     bot_stats = load_stats()
 
+    # ریست وضعیت awaiting برای ادمین اگر لازم باشد
+    if user_id == ADMIN_ID:
+        context.user_data.pop('awaiting_channel_info', None)
+
     # ثبت اطلاعات کاربر
     if str(user_id) not in bot_stats['users']:
         bot_stats['users'][str(user_id)] = {
@@ -1542,7 +1546,8 @@ async def handle_channel_info(update: Update, context: ContextTypes.DEFAULT_TYPE
     lines = text.split('\n')
     
     if len(lines) < 3:
-        await update.message.reply_text(MESSAGES['fa']['invalid_channel_format'])
+        keyboard = [[InlineKeyboardButton("🔙 بازگشت", callback_data="back_to_manage_channels")]]
+        await update.message.reply_text(MESSAGES['fa']['invalid_channel_format'], reply_markup=InlineKeyboardMarkup(keyboard))
         return
     
     channel_name = lines[0].strip()
