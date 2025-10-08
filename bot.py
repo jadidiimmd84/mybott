@@ -1705,9 +1705,6 @@ def main():
     channel_mgmt_handler = CallbackQueryHandler(handle_channel_management, pattern="^(manage_channels|add_channel|list_channels|remove_channel_\d+|back_to_admin|bot_stats|monitoring|back_to_main|back_to_manage_channels)$")
     application.add_handler(channel_mgmt_handler)
 
-    channel_info_handler = MessageHandler(filters.TEXT & (~filters.COMMAND), handle_channel_info)
-    application.add_handler(channel_info_handler)
-
     # هندلر جدید برای لغو عملیات
     cancel_handler = CallbackQueryHandler(handle_cancel, pattern="^(cancel_feedback|cancel_contact)$")
     application.add_handler(cancel_handler)
