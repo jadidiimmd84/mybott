@@ -700,14 +700,14 @@ def add_image_watermark(input_file, output_file, text):
 def find_downloaded_files(base_id):
     possible_files = []
     
-    extensions = ['*.mp4', '*.mkv', '*.webm', '*.mp3', '*.m4a', '*.jpg', '*.jpeg', '*.png']
+    extensions = ['mp4', 'mkv', 'webm', 'mp3', 'm4a', 'jpg', 'jpeg', 'png']
     
     for ext in extensions:
-        pattern = f"{base_id}*{ext}"
+        pattern = f"{base_id}*.{ext}"
         files = glob.glob(pattern)
         possible_files.extend(files)
         
-        exact_pattern = f"{base_id}.{ext[2:]}"
+        exact_pattern = f"{base_id}.{ext}"
         if os.path.exists(exact_pattern):
             possible_files.append(exact_pattern)
     
@@ -1481,7 +1481,7 @@ async def handle_channel_management(update: Update, context: ContextTypes.DEFAUL
 
 **منابع سیستم:**
 - مصرف CPU: {report['cpu_usage']}%
-- مصرف حافظه: {report['memory_usage'] }%
+- مصرف حافظه: {report['memory_usage']}%
 
 **کاربران بلاک‌کننده:**
 - تعداد کاربران بلاک‌کننده: {report['blocked_users_count']}
