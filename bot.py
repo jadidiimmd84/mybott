@@ -1397,6 +1397,7 @@ async def handle_channel_management(update: Update, context: ContextTypes.DEFAUL
         )
     
     elif query.data == "back_to_manage_channels":
+        context.user_data.pop('awaiting_channel_info', None)  # ریست awaiting_channel_info هنگام بازگشت
         keyboard = [
             [InlineKeyboardButton("➕ افزودن کانال", callback_data="add_channel")],
             [InlineKeyboardButton("📋 لیست کانال‌ها", callback_data="list_channels")],
