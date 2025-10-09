@@ -1042,9 +1042,15 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
             ydl_opts['writeinfojson'] = False
             ydl_opts['writethumbnail'] = False
         else:
-            download_type = 'video'
-            ydl_opts['format'] = 'best[ext=mp4]/best'
-            logger.info("Using default best quality")
+    download_type = 'video'
+    # اصلاح فرمت برای یوتیوب
+    if 'youtube.com' in user_url.lower() or 'youtu.be' in user_url.lower():
+        ydl_opts['format'] = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
+        ydl_opts['merge_output_format'] = 'mp4'
+    else:
+        ydl_opts['format'] = 'best[ext=mp4]/best'
+    
+    logger.info(f"Using format: {ydl_opts['format']}")
 
         # دانلود با format selector
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
