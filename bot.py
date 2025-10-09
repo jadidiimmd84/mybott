@@ -1041,6 +1041,7 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
             ydl_opts['format'] = 'best'
             ydl_opts['writeinfojson'] = False
             ydl_opts['writethumbnail'] = False
+            
         else:
     download_type = 'video'
     # اصلاح فرمت برای یوتیوب
