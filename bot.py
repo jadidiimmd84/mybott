@@ -688,23 +688,6 @@ def add_image_watermark(input_file, output_file, text):
     watermarked = Image.alpha_composite(img, txt)
     watermarked.convert("RGB").save(output_file, quality=95)
 
-# تابع برای پیدا کردن فایل‌های دانلود شده
-def find_downloaded_files(base_id):
-    possible_files = []
-    
-    extensions = ['mp4', 'mkv', 'webm', 'mp3', 'm4a', 'jpg', 'jpeg', 'png']
-    
-    for ext in extensions:
-        pattern = f"{base_id}*.{ext}"
-        files = glob.glob(pattern)
-        possible_files.extend(files)
-        
-        exact_pattern = f"{base_id}.{ext}"
-        if os.path.exists(exact_pattern):
-            possible_files.append(exact_pattern)
-    
-    return list(set(possible_files))
-
 # تابع تحلیل پترن URL
 def analyze_url_pattern(url):
     url_lower = url.lower()
@@ -791,9 +774,8 @@ def analyze_url_pattern(url):
 def detect_content_type(url):
     try:
         ydl_opts = {
-            'quiet': False,  # برای دیباگ
-            'verbose': True,  # برای دیباگ
-            'no_warnings': False,
+            'quiet': True,
+            'no_warnings': True,
             'nocheckcertificate': True,
             'extract_flat': False,
             'ignoreerrors': True,
@@ -960,7 +942,11 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
     lang = user_data.get(user_id, {}).get('lang', 'fa')
     
     download_type = 'unknown'
-    file_names = []
+    downloaded_files = []
+    
+    def progress_hook(d):
+        if d['status'] == 'finished':
+            downloaded_files.append(d['filename'])
     
     try:
         # تنظیمات پایه ydl_opts بدون format selector برای استخراج info
@@ -973,8 +959,7 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
             'fragment_retries': 5,
             'ca_certs': certifi.where(),
             'ignoreerrors': True,
-            'quiet': False,  # برای دیباگ
-            'verbose': True,  # برای دیباگ
+            'progress_hooks': [progress_hook],
         }
 
         if 'tiktok.com' in user_url.lower():
@@ -1002,7 +987,6 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
                 )
                 return
         
-        video_id = info_dict.get('id', 'unknown')
         caption = info_dict.get('description', '')
 
         # حالا ydl_opts برای دانلود با format مناسب
@@ -1024,36 +1008,35 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
         else:
             download_type = 'video'
             ydl_opts['format'] = 'best[ext=mp4]/best'
+            ydl_opts['merge_output_format'] = 'mp4'
             logger.info("Using default best quality")
 
         # دانلود با format selector
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([user_url])
         
-        downloaded_files = find_downloaded_files(video_id)
-        
         if not downloaded_files:
-            all_files = []
-            for ext in ['mp4', 'mkv', 'webm', 'mp3', 'm4a', 'jpg', 'jpeg', 'png']:
-                all_files.extend(glob.glob(f"*.{ext}"))
-            
-            if all_files:
-                all_files.sort(key=lambda x: os.path.getctime(x), reverse=True)
-                downloaded_files = all_files[:5]
+            response_time = time.time() - start_time
+            log_monitoring_data(success=False, response_time=response_time, error="No files downloaded", user_id=user_id)
+            await context.bot.edit_message_text(
+                chat_id=user_id,
+                message_id=sent_message_id,
+                text=MESSAGES[lang]['error'].format("هیچ فایلی دانلود نشد.")
+            )
+            return
 
         for file_path in downloaded_files:
             if os.path.exists(file_path):
-                file_names.append(file_path)
                 output_file_name = file_path
                 
                 if add_watermark and not is_audio_only:
                     if output_file_name.endswith('.mp4'):
-                        watermarked_file_name = f"watermarked_{output_file_name}"
+                        watermarked_file_name = f"watermarked_{os.path.basename(output_file_name)}"
                         add_video_watermark(output_file_name, watermarked_file_name, "nuvioo_bot")
                         os.remove(output_file_name)
                         output_file_name = watermarked_file_name
                     elif output_file_name.endswith(('.jpg', '.jpeg', '.png')):
-                        watermarked_file_name = f"watermarked_{output_file_name}"
+                        watermarked_file_name = f"watermarked_{os.path.basename(output_file_name)}"
                         add_image_watermark(output_file_name, watermarked_file_name, "nuvioo_bot")
                         os.remove(output_file_name)
                         output_file_name = watermarked_file_name
@@ -1073,12 +1056,6 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
                     log_monitoring_data(success=False, response_time=response_time, error=f"Failed to send file: {send_error}", user_id=user_id)
                     logger.error(f"خطا در ارسال فایل {output_file_name}: {send_error}")
                     await context.bot.send_message(chat_id=user_id, text=MESSAGES[lang]['error'].format(f"خطا در ارسال فایل: {send_error}"))
-
-        if not downloaded_files:
-            response_time = time.time() - start_time
-            log_monitoring_data(success=False, response_time=response_time, error="No files downloaded", user_id=user_id)
-            await context.bot.send_message(chat_id=user_id, text=MESSAGES[lang]['error'].format("هیچ فایلی دانلود نشد."))
-            return
 
         response_time = time.time() - start_time
         log_monitoring_data(success=True, response_time=response_time, user_id=user_id)
@@ -1146,7 +1123,8 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(chat_id=user_id, text=MESSAGES[lang]['start'], reply_markup=get_main_keyboard(lang))
 
     finally:
-        for file in file_names:
+        # Cleanup downloaded files
+        for file in downloaded_files:
             if os.path.exists(file):
                 try:
                     os.remove(file)
