@@ -952,10 +952,9 @@ def instagram_login():
         logger.error("❌ کوکی نداری. باید از مرورگر کوکی بگیری (cookies1.txt): %s", e)
     return cl
 
-# تابع اصلاح شده process_download - جایگزین تابع قبلی کنید
-
+# تابع اصلی دانلود
 async def process_download(context: ContextTypes.DEFAULT_TYPE):
-    start_time = time.time()
+    start_time = time.time()  # ثبت زمان شروع
     user_id = context.job.data['user_id']
     user_url = context.job.data['download_url']
     add_watermark = context.job.data['add_watermark']
@@ -972,7 +971,7 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
     file_names = []
     
     try:
-        # تنظیمات بهبود یافته
+        # تنظیمات بهبود یافته base_ydl_opts با headers اضافی برای جلوگیری از 403
         base_ydl_opts = {
             'outtmpl': '%(id)s.%(ext)s', 
             'cookiefile': 'cookies1.txt' if os.path.exists('cookies1.txt') else None,
@@ -982,13 +981,18 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
             'fragment_retries': 5,
             'ca_certs': certifi.where(),
             'ignoreerrors': True,
-            'quiet': False,
-            'verbose': True,
+            'quiet': False,  # برای دیباگ
+            'verbose': True,  # برای دیباگ
             'http_headers': {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
                 'Accept-Language': 'en-US,en;q=0.9',
                 'Referer': 'https://www.google.com/',
+                'Sec-Fetch-Dest': 'document',
+                'Sec-Fetch-Mode': 'navigate',
+                'Sec-Fetch-Site': 'none',
+                'Sec-Fetch-User': '?1',
+                'Upgrade-Insecure-Requests': '1',
             },
             'extractor_retries': 3,
         }
@@ -1004,7 +1008,7 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
         if "soundcloud.com/" in user_url and "/sets/" in user_url:
             base_ydl_opts['noplaylist'] = True
 
-        # استخراج info
+        # استخراج info بدون format selector با headers
         with yt_dlp.YoutubeDL(base_ydl_opts) as ydl_temp:
             info_dict = ydl_temp.extract_info(user_url, download=False)
             
@@ -1020,8 +1024,9 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
         
         video_id = info_dict.get('id', 'unknown')
         caption = info_dict.get('description', '')
+        logger.info(f"Video ID extracted: {video_id}")
 
-        # حالا ydl_opts برای دانلود
+        # حالا ydl_opts برای دانلود با format مناسب
         ydl_opts = base_ydl_opts.copy()
 
         if is_audio_only:
@@ -1035,85 +1040,54 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
         elif is_image_only:
             download_type = 'image'
             ydl_opts['format'] = 'best'
+            ydl_opts['writeinfojson'] = False
+            ydl_opts['writethumbnail'] = False
         else:
             download_type = 'video'
-            # اصلاح فرمت برای یوتیوب - این بخش مهم است
-            if 'youtube.com' in user_url.lower() or 'youtu.be' in user_url.lower():
-                # برای یوتیوب از فرمت ترکیبی استفاده کنید
-                ydl_opts['format'] = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
-                ydl_opts['merge_output_format'] = 'mp4'
-            else:
-                ydl_opts['format'] = 'best[ext=mp4]/best'
-            
-            logger.info(f"Using format: {ydl_opts['format']}")
+            ydl_opts['format'] = 'best'
+            ydl_opts['postprocessors'] = [{
+                'key': 'FFmpegVideoConvertor',
+                'preferedformat': 'mp4',
+            }]
+            logger.info("Using best format with MP4 conversion")
 
-        # دانلود
-        logger.info(f"Starting download for: {user_url}")
+        # دانلود با format selector
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([user_url])
         
-        logger.info(f"Download completed, searching for files with ID: {video_id}")
+        logger.info(f"All files in directory after download: {glob.glob('*')}")
         
-        # جستجوی فایل‌های دانلود شده - بهبود یافته
         downloaded_files = find_downloaded_files(video_id)
         
-        # اگر با ID پیدا نشد، آخرین فایل‌ها را بگیر
         if not downloaded_files:
-            logger.warning(f"No files found with ID {video_id}, searching for recent files")
             all_files = []
             for ext in ['mp4', 'mkv', 'webm', 'mp3', 'm4a', 'jpg', 'jpeg', 'png']:
                 all_files.extend(glob.glob(f"*.{ext}"))
             
             if all_files:
-                # مرتب‌سازی بر اساس زمان ایجاد
                 all_files.sort(key=lambda x: os.path.getctime(x), reverse=True)
-                downloaded_files = all_files[:3]  # 3 فایل آخر
-                logger.info(f"Found recent files: {downloaded_files}")
-            else:
-                logger.error("No files found at all")
+                downloaded_files = all_files[:5]
+                logger.info(f"Fallback to recent files: {downloaded_files}")
 
-        if not downloaded_files:
-            response_time = time.time() - start_time
-            log_monitoring_data(success=False, response_time=response_time, error="No files downloaded", user_id=user_id)
-            
-            # لیست کردن تمام فایل‌های موجود برای دیباگ
-            all_existing = os.listdir('.')
-            logger.error(f"All files in directory: {all_existing}")
-            
-            await context.bot.edit_message_text(
-                chat_id=user_id,
-                message_id=sent_message_id,
-                text=MESSAGES[lang]['error'].format("هیچ فایلی دانلود نشد. لطفا لینک را بررسی کنید.")
-            )
-            return
+        logger.info(f"Downloaded files found: {downloaded_files}")
 
-        # ارسال فایل‌ها
         for file_path in downloaded_files:
             if os.path.exists(file_path):
-                logger.info(f"Processing file: {file_path} (size: {os.path.getsize(file_path)} bytes)")
                 file_names.append(file_path)
                 output_file_name = file_path
                 
-                # واترمارک
                 if add_watermark and not is_audio_only:
                     if output_file_name.endswith('.mp4'):
                         watermarked_file_name = f"watermarked_{output_file_name}"
-                        try:
-                            add_video_watermark(output_file_name, watermarked_file_name, "nuvioo_bot")
-                            os.remove(output_file_name)
-                            output_file_name = watermarked_file_name
-                        except Exception as wm_error:
-                            logger.error(f"Watermark error: {wm_error}")
+                        add_video_watermark(output_file_name, watermarked_file_name, "nuvioo_bot")
+                        os.remove(output_file_name)
+                        output_file_name = watermarked_file_name
                     elif output_file_name.endswith(('.jpg', '.jpeg', '.png')):
                         watermarked_file_name = f"watermarked_{output_file_name}"
-                        try:
-                            add_image_watermark(output_file_name, watermarked_file_name, "nuvioo_bot")
-                            os.remove(output_file_name)
-                            output_file_name = watermarked_file_name
-                        except Exception as wm_error:
-                            logger.error(f"Watermark error: {wm_error}")
+                        add_image_watermark(output_file_name, watermarked_file_name, "nuvioo_bot")
+                        os.remove(output_file_name)
+                        output_file_name = watermarked_file_name
 
-                # ارسال فایل
                 try:
                     with open(output_file_name, 'rb') as media_file:
                         if output_file_name.endswith(('.mp4', '.mkv', '.webm')):
@@ -1124,15 +1098,22 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
                             await context.bot.send_audio(chat_id=user_id, audio=media_file, caption=caption)
                         else:
                             await context.bot.send_document(chat_id=user_id, document=media_file, caption=caption)
-                    logger.info(f"Successfully sent file: {output_file_name}")
                 except Exception as send_error:
-                    logger.error(f"Failed to send file {output_file_name}: {send_error}")
+                    response_time = time.time() - start_time
+                    log_monitoring_data(success=False, response_time=response_time, error=f"Failed to send file: {send_error}", user_id=user_id)
+                    logger.error(f"خطا در ارسال فایل {output_file_name}: {send_error}")
                     await context.bot.send_message(chat_id=user_id, text=MESSAGES[lang]['error'].format(f"خطا در ارسال فایل: {send_error}"))
+
+        if not downloaded_files:
+            response_time = time.time() - start_time
+            log_monitoring_data(success=False, response_time=response_time, error="No files downloaded", user_id=user_id)
+            logger.error(f"No files downloaded for URL: {user_url}, video_id: {video_id}")
+            await context.bot.send_message(chat_id=user_id, text=MESSAGES[lang]['error'].format("هیچ فایلی دانلود نشد. لطفاً لینک را بررسی کنید یا بعداً امتحان کنید."))
+            return
 
         response_time = time.time() - start_time
         log_monitoring_data(success=True, response_time=response_time, user_id=user_id)
 
-        # به‌روزرسانی آمار
         bot_stats['downloads'] += 1
         save_stats(bot_stats)
 
@@ -1153,16 +1134,17 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(chat_id=user_id, text=MESSAGES[lang]['start'], reply_markup=get_main_keyboard(lang))
 
     except yt_dlp.utils.DownloadError as e:
-        error_msg = str(e)
-        logger.error(f"DownloadError: {error_msg}")
-        
-        if "HTTP Error 403: Forbidden" in error_msg:
+        if "HTTP Error 403: Forbidden" in str(e):
+            # تلاش مجدد با headers اضافی یا proxy اگر لازم (اینجا فقط retry با sleep)
+            logger.warning(f"403 Forbidden detected, retrying after delay: {e}")
+            await asyncio.sleep(5)  # تاخیر قبل از retry
+            # می‌توان job را دوباره schedule کرد، اما برای سادگی، error را log و نمایش می‌دهیم
             response_time = time.time() - start_time
             log_monitoring_data(success=False, response_time=response_time, error=str(e), user_id=user_id)
             await context.bot.edit_message_text(
                 chat_id=user_id,
                 message_id=sent_message_id,
-                text=MESSAGES[lang]['error'].format("لینک محدود شده است (403). لطفا VPN استفاده کنید یا لینک دیگری امتحان کنید.")
+                text=MESSAGES[lang]['error'].format("لینک محدود شده است (403). لطفاً VPN استفاده کنید یا لینک دیگری امتحان کنید.")
             )
         else:
             response_time = time.time() - start_time
@@ -1170,28 +1152,58 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
             await context.bot.edit_message_text(
                 chat_id=user_id,
                 message_id=sent_message_id,
-                text=MESSAGES[lang]['error'].format(f"خطای دانلود: {error_msg}")
+                text=MESSAGES[lang]['error'].format(f"خطای دانلود: {e}")
+            )
+    except yt_dlp.utils.ExtractorError as e:
+        response_time = time.time() - start_time
+        error_msg = str(e).lower()
+        if "no video formats found" in error_msg:
+            log_monitoring_data(success=False, response_time=response_time, error=str(e), user_id=user_id)
+            await context.bot.edit_message_text(
+                chat_id=user_id,
+                message_id=sent_message_id,
+                text="🔄 در حال تشخیص عکس... تلاش مجدد"
             )
             
+            context.job_queue.run_once(
+                process_download,
+                when=2,
+                data={
+                    'user_id': user_id,
+                    'download_url': user_url,
+                    'add_watermark': add_watermark,
+                    'is_audio_only': False,
+                    'is_image_only': True,
+                    'message_id': sent_message_id
+                }
+            )
+            return
+        else:
+            log_monitoring_data(success=False, response_time=response_time, error=str(e), user_id=user_id)
+            await context.bot.edit_message_text(
+                chat_id=user_id,
+                message_id=sent_message_id,
+                text=MESSAGES[lang]['error'].format(f"خطای دانلود: {e}")
+            )
+
     except Exception as e:
         response_time = time.time() - start_time
         log_monitoring_data(success=False, response_time=response_time, error=str(e), user_id=user_id)
-        logger.error(f"General error: {e}", exc_info=True)
+        logger.error(f"خطای کلی: {e}")
         await context.bot.edit_message_text(
             chat_id=user_id,
             message_id=sent_message_id,
             text=MESSAGES[lang]['error'].format(str(e))
         )
+        await context.bot.send_message(chat_id=user_id, text=MESSAGES[lang]['start'], reply_markup=get_main_keyboard(lang))
 
     finally:
-        # پاک کردن فایل‌ها
         for file in file_names:
             if os.path.exists(file):
                 try:
                     os.remove(file)
-                    logger.info(f"Deleted file: {file}")
-                except Exception as del_error:
-                    logger.error(f"Failed to delete {file}: {del_error}")
+                except:
+                    pass
 
 # هندلر برای دریافت لینک و نمایش دکمه‌های نوع دانلود
 async def handle_download_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
