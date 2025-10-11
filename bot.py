@@ -1044,12 +1044,9 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
             ydl_opts['writethumbnail'] = False
         else:
             download_type = 'video'
-            ydl_opts['format'] = 'best'
-            ydl_opts['postprocessors'] = [{
-                'key': 'FFmpegVideoConvertor',
-                'preferedformat': 'mp4',
-            }]
-            logger.info("Using best format with MP4 conversion")
+            # تغییر format selector برای اطمینان از دانلود بدون نیاز به postprocessor
+            ydl_opts['format'] = 'best[ext=mp4]/best'
+            logger.info("Using best mp4 format")
 
         # دانلود با format selector
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
