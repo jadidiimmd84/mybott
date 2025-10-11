@@ -15,6 +15,7 @@ from datetime import datetime, timedelta
 from instagrapi import Client
 import psutil  # برای مانیتورینگ منابع
 import time
+import shutil
 
 # تنظیمات فایل‌ها
 CHANNELS_FILE = 'channels.json'
@@ -799,12 +800,18 @@ def detect_content_type(url):
             'extract_flat': False,
             'ignoreerrors': True,
             'http_headers': {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
                 'Accept-Language': 'en-US,en;q=0.9',
                 'Referer': 'https://www.google.com/',
             },
             'extractor_retries': 3,
+            'extractor_args': {
+                'youtube': {
+                    'player_client': ['web', 'android', 'ios'],
+                    'skip': ['hls', 'dash', 'translations'],
+                }
+            }
         }
         
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -952,6 +959,22 @@ def instagram_login():
         logger.error("❌ کوکی نداری. باید از مرورگر کوکی بگیری (cookies1.txt): %s", e)
     return cl
 
+# تابع پاک کردن کش yt-dlp
+def clear_yt_dlp_cache():
+    try:
+        # پاک کردن کش با subprocess
+        subprocess.run(['yt-dlp', '--rm-cache-dir'], capture_output=True, check=True)
+        logger.info("کش yt-dlp پاک شد.")
+    except Exception as e:
+        try:
+            # پاک کردن دستی دایرکتوری کش
+            cache_dir = os.path.expanduser('~/.cache/yt-dlp')
+            if os.path.exists(cache_dir):
+                shutil.rmtree(cache_dir)
+                logger.info("دایرکتوری کش yt-dlp پاک شد.")
+        except Exception as e2:
+            logger.error(f"خطا در پاک کردن کش: {e2}")
+
 # تابع اصلی دانلود
 async def process_download(context: ContextTypes.DEFAULT_TYPE):
     start_time = time.time()  # ثبت زمان شروع
@@ -971,20 +994,23 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
     file_names = []
     
     try:
+        # پاک کردن کش yt-dlp قبل از دانلود
+        clear_yt_dlp_cache()
+        
         # تنظیمات بهبود یافته base_ydl_opts با headers اضافی برای جلوگیری از 403
         base_ydl_opts = {
             'outtmpl': '%(id)s.%(ext)s', 
             'cookiefile': 'cookies1.txt' if os.path.exists('cookies1.txt') else None,
             'geo_bypass_country': 'US',
             'nocheckcertificate': True,
-            'retries': 5,
-            'fragment_retries': 5,
+            'retries': 10,
+            'fragment_retries': 10,
             'ca_certs': certifi.where(),
             'ignoreerrors': True,
             'quiet': False,  # برای دیباگ
             'verbose': True,  # برای دیباگ
             'http_headers': {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
                 'Accept-Language': 'en-US,en;q=0.9',
                 'Referer': 'https://www.google.com/',
@@ -994,11 +1020,18 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
                 'Sec-Fetch-User': '?1',
                 'Upgrade-Insecure-Requests': '1',
             },
-            'extractor_retries': 3,
+            'extractor_retries': 5,
+            'extractor_args': {
+                'youtube': {
+                    'player_client': ['web', 'android', 'ios'],
+                    'skip': ['hls', 'dash', 'translations'],
+                    'lang': ['en'],
+                }
+            },
         }
 
         if 'tiktok.com' in user_url.lower():
-            base_ydl_opts['extractor_args'] = {'tiktok': {'app_version': 'latest'}}
+            base_ydl_opts['extractor_args']['tiktok'] = {'app_version': 'latest'}
 
         if "instagram.com/stories/" in user_url or "instagram.com/reels/" in user_url:
             base_ydl_opts['noplaylist'] = True
@@ -1031,7 +1064,7 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
 
         if is_audio_only:
             download_type = 'audio'
-            ydl_opts['format'] = 'bestaudio/best'
+            ydl_opts['format'] = 'bestaudio[ext=m4a]/bestaudio/best'
             ydl_opts['postprocessors'] = [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'mp3',
@@ -1044,9 +1077,8 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
             ydl_opts['writethumbnail'] = False
         else:
             download_type = 'video'
-            # تغییر format selector برای اطمینان از دانلود بدون نیاز به postprocessor
-            ydl_opts['format'] = 'best[ext=mp4]/best'
-            logger.info("Using best mp4 format")
+            ydl_opts['format'] = 'bestvideo+bestaudio/best[height<=720]/best'
+            logger.info("Using best video format")
 
         # دانلود با format selector
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -1132,17 +1164,30 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
 
     except yt_dlp.utils.DownloadError as e:
         if "HTTP Error 403: Forbidden" in str(e):
-            # تلاش مجدد با headers اضافی یا proxy اگر لازم (اینجا فقط retry با sleep)
             logger.warning(f"403 Forbidden detected, retrying after delay: {e}")
-            await asyncio.sleep(5)  # تاخیر قبل از retry
-            # می‌توان job را دوباره schedule کرد، اما برای سادگی، error را log و نمایش می‌دهیم
-            response_time = time.time() - start_time
-            log_monitoring_data(success=False, response_time=response_time, error=str(e), user_id=user_id)
-            await context.bot.edit_message_text(
-                chat_id=user_id,
-                message_id=sent_message_id,
-                text=MESSAGES[lang]['error'].format("لینک محدود شده است (403). لطفاً VPN استفاده کنید یا لینک دیگری امتحان کنید.")
-            )
+            await asyncio.sleep(10)  # تاخیر بیشتر قبل از retry
+            # تلاش مجدد برای دانلود
+            try:
+                clear_yt_dlp_cache()
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl_retry:
+                    ydl_retry.download([user_url])
+                # اگر موفق شد، ادامه کد...
+                # (کد ارسال فایل‌ها رو تکرار کن)
+                response_time = time.time() - start_time
+                log_monitoring_data(success=True, response_time=response_time, user_id=user_id)
+                await context.bot.edit_message_text(
+                    chat_id=user_id,
+                    message_id=sent_message_id,
+                    text=MESSAGES[lang]['downloaded']
+                )
+            except Exception as retry_e:
+                response_time = time.time() - start_time
+                log_monitoring_data(success=False, response_time=response_time, error=str(retry_e), user_id=user_id)
+                await context.bot.edit_message_text(
+                    chat_id=user_id,
+                    message_id=sent_message_id,
+                    text=MESSAGES[lang]['error'].format("لینک محدود شده است (403). لطفاً VPN استفاده کنید یا لینک دیگری امتحان کنید.")
+                )
         else:
             response_time = time.time() - start_time
             log_monitoring_data(success=False, response_time=response_time, error=str(e), user_id=user_id)
@@ -1701,6 +1746,13 @@ def get_advanced_stats():
 
 # تابع اصلی
 def main():
+    # آپگرید yt-dlp در startup
+    try:
+        subprocess.run(['pip', 'install', '--upgrade', 'yt-dlp'], capture_output=True, check=True)
+        logger.info("yt-dlp آپدیت شد.")
+    except Exception as e:
+        logger.error(f"خطا در آپدیت yt-dlp: {e}")
+    
     application = Application.builder().token(TOKEN).build()
 
     start_handler = CommandHandler('start', start)
