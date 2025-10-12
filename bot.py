@@ -147,8 +147,7 @@ MESSAGES = {
         'invalid_channel_format': '❌ فرمت نادرست! لطفاً به فرمت زیر ارسال کنید:\n\nنام کانال\n@channel_username\nhttps://t.me/channel_username',
         'back_to_main': '🔙 بازگشت به منوی اصلی',
         'monitoring': '🔍 مانیتورینگ عملکرد',
-        'operation_cancelled': 'عملیات لغو شد.',
-        'youtube_not_supported': 'دانلود از یوتیوب پشتیبانی نمی‌شود. لطفاً لینک از پلتفرم‌های دیگر ارسال کنید.'
+        'operation_cancelled': 'عملیات لغو شد.'
     },
     'en': {
         'start': 'Hello! I am a downloader bot. Please send a link for me to download.',
@@ -183,8 +182,7 @@ MESSAGES = {
         'admin_reply_received': '📩 **Reply from Admin**\n\n{}',
         'admin_reply_prompt': 'Please write your reply to the user with ID {}:',
         'monitoring': '🔍 Performance Monitoring',
-        'operation_cancelled': 'Operation cancelled.',
-        'youtube_not_supported': 'YouTube download is not supported. Please send a link from other platforms.'
+        'operation_cancelled': 'Operation cancelled.'
     }
 }
 
@@ -572,7 +570,595 @@ async def handle_feedback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         })
         save_feedback(feedback)
         
-        reply_keybo...(truncated 25032 characters)... message_id=sent_message_id,
+        reply_keyboard = InlineKeyboardMarkup([[InlineKeyboardButton(text="پاسخ به این کاربر", callback_data=f"reply_to_{user_id}")]])
+        
+        admin_message = MESSAGES[lang]['feedback_to_admin'].format(username, feedback_text, timestamp, user_id)
+        await context.bot.send_message(
+            chat_id=ADMIN_ID,
+            text=admin_message,
+            parse_mode='Markdown',
+            reply_markup=reply_keyboard
+        )
+        
+        await update.message.reply_text(MESSAGES[lang]['feedback_received'], reply_markup=get_main_keyboard(lang))
+        context.user_data['awaiting_feedback'] = False
+
+# تابع برای دریافت و پردازش پیام به ادمین
+async def handle_admin_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    lang = user_data.get(user_id, {}).get('lang', 'fa')
+    
+    if context.user_data.get('awaiting_admin_message', False):
+        message_text = update.message.text
+        
+        user_info = bot_stats['users'].get(str(user_id), {})
+        username = user_info.get('username', 'Unknown')
+        timestamp = datetime.now().isoformat()
+        
+        reply_keyboard = InlineKeyboardMarkup([[InlineKeyboardButton(text="پاسخ به این کاربر", callback_data=f"reply_to_{user_id}")]])
+        
+        admin_message = MESSAGES[lang]['message_to_admin'].format(username, message_text, timestamp, user_id)
+        await context.bot.send_message(
+            chat_id=ADMIN_ID,
+            text=admin_message,
+            parse_mode='Markdown',
+            reply_markup=reply_keyboard
+        )
+        
+        await update.message.reply_text(MESSAGES[lang]['contact_admin_received'], reply_markup=get_main_keyboard(lang))
+        context.user_data['awaiting_admin_message'] = False
+
+# هندلر برای دریافت پاسخ ادمین و ارسال به کاربر
+async def handle_admin_reply_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    if user_id != ADMIN_ID:
+        return
+    
+    if context.user_data.get('awaiting_admin_reply_to_user'):
+        target_user_id = context.user_data.pop('awaiting_admin_reply_to_user')
+        reply_text = update.message.text
+        
+        target_lang = user_data.get(target_user_id, {}).get('lang', 'fa')
+        final_message = MESSAGES[target_lang]['admin_reply_received'].format(reply_text)
+        
+        try:
+            await context.bot.send_message(
+                chat_id=target_user_id,
+                text=final_message,
+                parse_mode='Markdown'
+            )
+            await update.message.reply_text("✅ پاسخ شما به کاربر ارسال شد.")
+        except Exception as e:
+            log_monitoring_data(success=False, error=f"Failed to send reply to user {target_user_id}: {e}", user_id=target_user_id)
+            await update.message.reply_text(f"❌ خطا در ارسال پیام به کاربر: {e}")
+
+# هندلر برای مدیریت کلیک روی دکمه شیشه‌ای پاسخ
+async def handle_admin_reply_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    user_id = query.from_user.id
+    await query.answer()
+
+    if user_id != ADMIN_ID:
+        await query.edit_message_text("این دکمه فقط برای مدیر است.")
+        return
+        
+    try:
+        data = query.data.split('_')
+        target_user_id = int(data[2])
+        
+        context.user_data['awaiting_admin_reply_to_user'] = target_user_id
+        
+        await query.edit_message_text(MESSAGES['fa']['admin_reply_prompt'].format(target_user_id))
+    except:
+        await query.edit_message_text("خطا در پردازش. لطفاً مجدداً تلاش کنید.")
+
+# تابع اضافه کردن واترمارک به ویدیو
+def add_video_watermark(input_file, output_file, text):
+    command = [
+        'ffmpeg',
+        '-i', input_file,
+        '-vf', f"drawtext=text=\"@{text}\":x=(w-text_w)/2:y=H-th-10:fontsize=40:fontcolor=white:shadowcolor=black:shadowx=2:shadowy=2",
+        '-c:a', 'copy',
+        '-y', output_file
+    ]
+    subprocess.run(command, check=True)
+
+# تابع اضافه کردن واترمارک به عکس
+def add_image_watermark(input_file, output_file, text):
+    img = Image.open(input_file).convert("RGBA")
+    txt = Image.new('RGBA', img.size, (255, 255, 255, 0))
+    d = ImageDraw.Draw(txt)
+    font_size = 40
+    try:
+        font = ImageFont.truetype("timesbd.ttf", font_size)
+    except IOError:
+        font = ImageFont.load_default()
+    
+    bbox = d.textbbox((0, 0), f"@{text}", font=font)
+    textwidth = bbox[2] - bbox[0]
+    textheight = bbox[3] - bbox[1]
+    
+    x = (img.width - textwidth) / 2
+    y = img.height - textheight - 10
+    
+    d.text((x, y), f"@{text}", font=font, fill=(255, 255, 255, 128))
+    
+    watermarked = Image.alpha_composite(img, txt)
+    watermarked.convert("RGB").save(output_file, quality=95)
+
+# تابع برای پیدا کردن فایل‌های دانلود شده
+def find_downloaded_files(base_id):
+    possible_files = []
+    
+    extensions = ['mp4', 'mkv', 'webm', 'mp3', 'm4a', 'jpg', 'jpeg', 'png']
+    
+    for ext in extensions:
+        pattern = f"{base_id}*.{ext}"
+        files = glob.glob(pattern)
+        possible_files.extend(files)
+        
+        exact_pattern = f"{base_id}.{ext}"
+        if os.path.exists(exact_pattern):
+            possible_files.append(exact_pattern)
+    
+    return list(set(possible_files))
+
+# تابع تحلیل پترن URL
+def analyze_url_pattern(url):
+    url_lower = url.lower()
+    
+    if 'instagram.com' in url_lower:
+        if '/p/' in url_lower:
+            if any(vid_indicator in url_lower for vid_indicator in ['video', '.mp4', 'reel']):
+                return {
+                    'is_image': False,
+                    'has_video': True,
+                    'has_audio': True,
+                    'duration': 1
+                }
+            else:
+                return {
+                    'is_image': True,
+                    'has_video': False,
+                    'has_audio': False,
+                    'duration': 0
+                }
+        elif '/reel/' in url_lower:
+            return {
+                'is_image': False,
+                'has_video': True,
+                'has_audio': True,
+                'duration': 1
+            }
+        elif '/stories/' in url_lower:
+            return {
+                'is_image': False,
+                'has_video': True,
+                'has_audio': True,
+                'duration': 1
+            }
+    
+    if 'tiktok.com' in url_lower:
+        return {
+            'is_image': False,
+            'has_video': True,
+            'has_audio': True,
+            'duration': 1
+        }
+    
+    if any(ext in url_lower for ext in ['.jpg', '.jpeg', '.png', '.webp', '.gif']):
+        return {
+            'is_image': True,
+            'has_video': False,
+            'has_audio': False,
+            'duration': 0
+        }
+    
+    if any(ext in url_lower for ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm']):
+        return {
+            'is_image': False,
+            'has_video': True,
+            'has_audio': True,
+            'duration': 1
+        }
+    
+    if any(ext in url_lower for ext in ['.mp3', '.m4a', '.wav', '.flac']):
+        return {
+            'is_image': False,
+            'has_video': False,
+            'has_audio': True,
+            'duration': 1
+        }
+    
+    return {
+        'is_image': False,
+        'has_video': True,
+        'has_audio': True,
+        'duration': 1
+    }
+
+# تابع تشخیص نوع محتوا
+def detect_content_type(url):
+    try:
+        # تنظیمات بهبود یافته برای استخراج info با headers اضافی برای جلوگیری از 403
+        ydl_opts = {
+            'quiet': False,  # برای دیباگ
+            'verbose': True,  # برای دیباگ
+            'no_warnings': False,
+            'nocheckcertificate': True,
+            'extract_flat': False,
+            'ignoreerrors': True,
+            'http_headers': {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Referer': 'https://www.google.com/',
+            },
+            'extractor_retries': 3,
+        }
+        
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            try:
+                info_dict = ydl.extract_info(url, download=False)
+                
+                if info_dict is None:
+                    return analyze_url_pattern(url)
+                
+                ext = info_dict.get('ext', '').lower()
+                url_lower = url.lower()
+                
+                image_extensions = ['jpg', 'jpeg', 'png', 'webp', 'gif']
+                
+                if ext in image_extensions:
+                    return {
+                        'is_image': True,
+                        'has_video': False,
+                        'has_audio': False,
+                        'duration': 0
+                    }
+                
+                if any(img_ext in url_lower for img_ext in ['.jpg', '.jpeg', '.png', '.webp']):
+                    return {
+                        'is_image': True,
+                        'has_video': False,
+                        'has_audio': False,
+                        'duration': 0
+                    }
+                
+                formats = info_dict.get('formats', [])
+                
+                if not formats:
+                    duration = info_dict.get('duration')
+                    width = info_dict.get('width', 0)
+                    height = info_dict.get('height', 0)
+                    
+                    if (duration is None or duration == 0) and width > 0 and height > 0:
+                        return {
+                            'is_image': True,
+                            'has_video': False,
+                            'has_audio': False,
+                            'duration': 0
+                        }
+                    
+                    return analyze_url_pattern(url)
+                
+                has_video = False
+                has_audio = False
+                
+                for fmt in formats:
+                    vcodec = fmt.get('vcodec', 'none')
+                    acodec = fmt.get('acodec', 'none')
+                    
+                    if vcodec and vcodec != 'none':
+                        has_video = True
+                    if acodec and acodec != 'none':
+                        has_audio = True
+                
+                if not has_video and not has_audio:
+                    if info_dict.get('vcodec') and info_dict.get('vcodec') != 'none':
+                        has_video = True
+                    if info_dict.get('acodec') and info_dict.get('acodec') != 'none':
+                        has_audio = True
+                
+                duration = info_dict.get('duration', 0)
+                if duration is None or duration == 0:
+                    return {
+                        'is_image': True,
+                        'has_video': False,
+                        'has_audio': False,
+                        'duration': 0
+                    }
+                
+                return {
+                    'is_image': False,
+                    'has_video': has_video,
+                    'has_audio': has_audio,
+                    'duration': duration
+                }
+                
+            except yt_dlp.utils.ExtractorError as e:
+                error_msg = str(e).lower()
+                if "no video formats found" in error_msg:
+                    return {
+                        'is_image': True,
+                        'has_video': False,
+                        'has_audio': False,
+                        'duration': 0
+                    }
+                return analyze_url_pattern(url)
+                
+    except Exception as e:
+        logger.error(f"خطای کلی در تشخیص نوع محتوا: {e}")
+        return analyze_url_pattern(url)
+
+# تابع تشخیص سریع بر اساس URL
+def quick_url_detection(url):
+    url_lower = url.lower()
+    
+    if any(domain in url_lower for domain in ['twitter.com', 'x.com']):
+        if '/photo/' in url_lower or '/media/' in url_lower:
+            return 'image'
+        return 'video'
+    
+    if 'instagram.com' in url_lower:
+        if '/p/' in url_lower:
+            return 'unknown'
+        elif '/reel/' in url_lower:
+            return 'video'
+        elif '/stories/' in url_lower:
+            return 'unknown'
+    
+    if 'tiktok.com' in url_lower:
+        return 'video'
+    
+    if 'soundcloud.com' in url_lower:
+        return 'audio'
+
+    if 'pinterest.com' in url_lower or 'pin.it' in url_lower:
+        return 'unknown'
+
+    if any(ext in url_lower for ext in ['.jpg', '.jpeg', '.png', '.webp', '.gif']):
+        return 'image'
+    
+    if any(ext in url_lower for ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm']):
+        return 'video'
+    
+    if any(ext in url_lower for ext in ['.mp3', '.m4a', '.wav', '.flac']):
+        return 'audio'
+    
+    return 'unknown'
+
+# تابع لاگین به اینستاگرام و ذخیره کوکی
+def instagram_login():
+    cl = Client()
+    try:
+        cl.load_settings("settings.json")
+        cl.get_timeline_feed()
+        logger.info("✅ اینستاگرام با کوکی‌های قبلی لاگین شد")
+    except Exception as e:
+        logger.error("❌ کوکی نداری. باید از مرورگر کوکی بگیری (cookies1.txt): %s", e)
+    return cl
+
+# تابع پاک کردن کش yt-dlp
+def clear_yt_dlp_cache():
+    try:
+        # پاک کردن کش با subprocess
+        subprocess.run(['yt-dlp', '--rm-cache-dir'], capture_output=True, check=True)
+        logger.info("کش yt-dlp پاک شد.")
+    except Exception as e:
+        try:
+            # پاک کردن دستی دایرکتوری کش
+            cache_dir = os.path.expanduser('~/.cache/yt-dlp')
+            if os.path.exists(cache_dir):
+                shutil.rmtree(cache_dir)
+                logger.info("دایرکتوری کش yt-dlp پاک شد.")
+        except Exception as e2:
+            logger.error(f"خطا در پاک کردن کش: {e2}")
+
+# تابع اصلی دانلود
+async def process_download(context: ContextTypes.DEFAULT_TYPE):
+    start_time = time.time()  # ثبت زمان شروع
+    user_id = context.job.data['user_id']
+    user_url = context.job.data['download_url']
+    add_watermark = context.job.data['add_watermark']
+    is_audio_only = context.job.data['is_audio_only']
+    is_image_only = context.job.data.get('is_image_only', False)
+    sent_message_id = context.job.data['message_id']
+    
+    global user_data
+    user_data = load_user_data()
+
+    lang = user_data.get(user_id, {}).get('lang', 'fa')
+    
+    download_type = 'unknown'
+    file_names = []
+    
+    try:
+        # پاک کردن کش yt-dlp قبل از دانلود
+        clear_yt_dlp_cache()
+        
+        # تنظیمات بهبود یافته base_ydl_opts با headers اضافی برای جلوگیری از 403
+        base_ydl_opts = {
+            'outtmpl': '%(id)s.%(ext)s', 
+            'cookiefile': 'cookies1.txt' if os.path.exists('cookies1.txt') else None,
+            'geo_bypass_country': 'US',
+            'nocheckcertificate': True,
+            'retries': 10,
+            'fragment_retries': 10,
+            'ca_certs': certifi.where(),
+            'ignoreerrors': True,
+            'quiet': False,  # برای دیباگ
+            'verbose': True,  # برای دیباگ
+            'http_headers': {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Referer': 'https://www.google.com/',
+                'Sec-Fetch-Dest': 'document',
+                'Sec-Fetch-Mode': 'navigate',
+                'Sec-Fetch-Site': 'none',
+                'Sec-Fetch-User': '?1',
+                'Upgrade-Insecure-Requests': '1',
+            },
+            'extractor_retries': 5,
+        }
+
+        if 'tiktok.com' in user_url.lower():
+            base_ydl_opts['extractor_args']['tiktok'] = {'app_version': 'latest'}
+
+        if "instagram.com/stories/" in user_url or "instagram.com/reels/" in user_url:
+            base_ydl_opts['noplaylist'] = True
+        else:
+            base_ydl_opts['noplaylist'] = False
+            
+        if "soundcloud.com/" in user_url and "/sets/" in user_url:
+            base_ydl_opts['noplaylist'] = True
+
+        # استخراج info بدون format selector با headers
+        with yt_dlp.YoutubeDL(base_ydl_opts) as ydl_temp:
+            info_dict = ydl_temp.extract_info(user_url, download=False)
+            
+            if info_dict is None:
+                response_time = time.time() - start_time
+                log_monitoring_data(success=False, response_time=response_time, error="Unable to fetch link info", user_id=user_id)
+                await context.bot.edit_message_text(
+                    chat_id=user_id,
+                    message_id=sent_message_id,
+                    text=MESSAGES[lang]['error'].format("نتوانستم اطلاعات لینک را دریافت کنم.")
+                )
+                return
+        
+        video_id = info_dict.get('id', 'unknown')
+        caption = info_dict.get('description', '')
+        logger.info(f"Video ID extracted: {video_id}")
+
+        # حالا ydl_opts برای دانلود با format مناسب
+        ydl_opts = base_ydl_opts.copy()
+
+        if is_audio_only:
+            download_type = 'audio'
+            ydl_opts['format'] = 'bestaudio[ext=m4a]/bestaudio/best'
+            ydl_opts['postprocessors'] = [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '192',
+            }]
+        elif is_image_only:
+            download_type = 'image'
+            ydl_opts['format'] = 'best'
+            ydl_opts['writeinfojson'] = False
+            ydl_opts['writethumbnail'] = False
+        else:
+            download_type = 'video'
+            ydl_opts['format'] = 'bestvideo+bestaudio/best[height<=720]/best'
+            logger.info("Using best video format")
+
+        # دانلود با format selector
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([user_url])
+        
+        logger.info(f"All files in directory after download: {glob.glob('*')}")
+        
+        downloaded_files = find_downloaded_files(video_id)
+        
+        if not downloaded_files:
+            all_files = []
+            for ext in ['mp4', 'mkv', 'webm', 'mp3', 'm4a', 'jpg', 'jpeg', 'png']:
+                all_files.extend(glob.glob(f"*.{ext}"))
+            
+            if all_files:
+                all_files.sort(key=lambda x: os.path.getctime(x), reverse=True)
+                downloaded_files = all_files[:5]
+                logger.info(f"Fallback to recent files: {downloaded_files}")
+
+        logger.info(f"Downloaded files found: {downloaded_files}")
+
+        for file_path in downloaded_files:
+            if os.path.exists(file_path):
+                file_names.append(file_path)
+                output_file_name = file_path
+                
+                if add_watermark and not is_audio_only:
+                    if output_file_name.endswith('.mp4'):
+                        watermarked_file_name = f"watermarked_{output_file_name}"
+                        add_video_watermark(output_file_name, watermarked_file_name, "nuvioo_bot")
+                        os.remove(output_file_name)
+                        output_file_name = watermarked_file_name
+                    elif output_file_name.endswith(('.jpg', '.jpeg', '.png')):
+                        watermarked_file_name = f"watermarked_{output_file_name}"
+                        add_image_watermark(output_file_name, watermarked_file_name, "nuvioo_bot")
+                        os.remove(output_file_name)
+                        output_file_name = watermarked_file_name
+
+                try:
+                    with open(output_file_name, 'rb') as media_file:
+                        if output_file_name.endswith(('.mp4', '.mkv', '.webm')):
+                            await context.bot.send_video(chat_id=user_id, video=media_file, caption=caption)
+                        elif output_file_name.endswith(('.jpg', '.jpeg', '.png')):
+                            await context.bot.send_photo(chat_id=user_id, photo=media_file, caption=caption)
+                        elif output_file_name.endswith(('.mp3', '.m4a')):
+                            await context.bot.send_audio(chat_id=user_id, audio=media_file, caption=caption)
+                        else:
+                            await context.bot.send_document(chat_id=user_id, document=media_file, caption=caption)
+                except Exception as send_error:
+                    response_time = time.time() - start_time
+                    log_monitoring_data(success=False, response_time=response_time, error=f"Failed to send file: {send_error}", user_id=user_id)
+                    logger.error(f"خطا در ارسال فایل {output_file_name}: {send_error}")
+                    await context.bot.send_message(chat_id=user_id, text=MESSAGES[lang]['error'].format(f"خطا در ارسال فایل: {send_error}"))
+
+        if not downloaded_files:
+            response_time = time.time() - start_time
+            log_monitoring_data(success=False, response_time=response_time, error="No files downloaded", user_id=user_id)
+            logger.error(f"No files downloaded for URL: {user_url}, video_id: {video_id}")
+            await context.bot.send_message(chat_id=user_id, text=MESSAGES[lang]['error'].format("هیچ فایلی دانلود نشد. لطفاً لینک را بررسی کنید یا بعداً امتحان کنید."))
+            return
+
+        response_time = time.time() - start_time
+        log_monitoring_data(success=True, response_time=response_time, user_id=user_id)
+
+        bot_stats['downloads'] += 1
+        save_stats(bot_stats)
+
+        user_data = load_user_data()
+        if 'download_history' not in user_data[user_id]:
+            user_data[user_id]['download_history'] = []
+        user_data[user_id]['download_history'].append({
+            'type': download_type,
+            'timestamp': datetime.now().isoformat()
+        })
+        save_user_data(user_data)
+        
+        await context.bot.edit_message_text(
+            chat_id=user_id,
+            message_id=sent_message_id,
+            text=MESSAGES[lang]['downloaded']
+        )
+        await context.bot.send_message(chat_id=user_id, text=MESSAGES[lang]['start'], reply_markup=get_main_keyboard(lang))
+
+    except yt_dlp.utils.DownloadError as e:
+        if "HTTP Error 403: Forbidden" in str(e):
+            logger.warning(f"403 Forbidden detected, retrying after delay: {e}")
+            await asyncio.sleep(10)  # تاخیر بیشتر قبل از retry
+            # تلاش مجدد برای دانلود
+            try:
+                clear_yt_dlp_cache()
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl_retry:
+                    ydl_retry.download([user_url])
+                # اگر موفق شد، ادامه کد...
+                # (کد ارسال فایل‌ها رو تکرار کن)
+                response_time = time.time() - start_time
+                log_monitoring_data(success=True, response_time=response_time, user_id=user_id)
+                await context.bot.edit_message_text(
+                    chat_id=user_id,
+                    message_id=sent_message_id,
+                    text=MESSAGES[lang]['downloaded']
+                )
+            except Exception as retry_e:
+                response_time = time.time() - start_time
+                log_monitoring_data(success=False, response_time=response_time, error=str(retry_e), user_id=user_id)
+                await context.bot.edit_message_text(
+                    chat_id=user_id,
+                    message_id=sent_message_id,
                     text=MESSAGES[lang]['error'].format("لینک محدود شده است (403). لطفاً VPN استفاده کنید یا لینک دیگری امتحان کنید.")
                 )
         else:
@@ -641,11 +1227,6 @@ async def handle_download_request(update: Update, context: ContextTypes.DEFAULT_
     
     url = update.message.text
     context.user_data['download_url'] = url
-    
-    # Check for YouTube URLs and block them
-    if 'youtube.com' in url.lower() or 'youtu.be' in url.lower():
-        await update.message.reply_text(MESSAGES[lang]['youtube_not_supported'])
-        return
     
     checking_message = await update.message.reply_text("🔍 در حال بررسی نوع محتوا...")
     
@@ -950,6 +1531,7 @@ async def handle_channel_management(update: Update, context: ContextTypes.DEFAUL
 - تعداد کاربران بلاک‌کننده: {report['blocked_users_count']}
 
 **خطاهای اخیر:**
+
 """
         for error in report['recent_errors']:
             text += f"- {error['timestamp']}: {error['error']} (کاربر: {error['user_id']})\n"
