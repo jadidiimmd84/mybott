@@ -782,11 +782,11 @@ def detect_content_type(url):
     try:
         # تنظیمات بهبود یافته برای استخراج info با headers اضافی برای جلوگیری از 403
         ydl_opts = {
-            'quiet': False,  # برای دیباگ
-            'verbose': True,  # برای دیباگ
-            'no_warnings': False,
+            'quiet': True,  # خاموش کردن لاگ‌های اضافی برای سرعت
+            'verbose': False,  # خاموش کردن verbose برای سرعت
+            'no_warnings': True,
             'nocheckcertificate': True,
-            'extract_flat': False,
+            'extract_flat': True,  # استخراج سریع‌تر بدون دانلود
             'ignoreerrors': True,
             'http_headers': {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
@@ -795,6 +795,9 @@ def detect_content_type(url):
                 'Referer': 'https://www.google.com/',
             },
             'extractor_retries': 3,
+            'extractor_args': {
+                'generic': {'extract_flat': True},  # بهینه‌سازی استخراج
+            },
         }
         
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -987,8 +990,8 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
             'fragment_retries': 10,
             'ca_certs': certifi.where(),
             'ignoreerrors': True,
-            'quiet': False,  # برای دیباگ
-            'verbose': True,  # برای دیباگ
+            'quiet': True,  # خاموش کردن لاگ‌های اضافی برای سرعت
+            'verbose': False,  # خاموش کردن verbose برای سرعت
             'http_headers': {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
@@ -1001,11 +1004,13 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
                 'Upgrade-Insecure-Requests': '1',
             },
             'extractor_retries': 5,
-            'extractor_args': {},
+            'extractor_args': {
+                'generic': {'extract_flat': True},  # بهینه‌سازی استخراج
+                'tiktok': {'app_version': 'latest'},  # بهینه برای تیک‌تاک
+                'instagram': {'skip': ['hls', 'dash']},  # اسکیپ فرمت‌های کند
+            },
+            'ratelimit': 100000,  # محدود کردن سرعت به 100 KB/s برای جلوگیری از بلاک
         }
-
-        if 'tiktok.com' in user_url.lower():
-            base_ydl_opts['extractor_args']['tiktok'] = {'app_version': 'latest'}
 
         if "instagram.com/stories/" in user_url or "instagram.com/reels/" in user_url:
             base_ydl_opts['noplaylist'] = True
@@ -1051,7 +1056,7 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
             ydl_opts['writethumbnail'] = False
         else:
             download_type = 'video'
-            ydl_opts['format'] = 'bestvideo+bestaudio/best[height<=720]/best'
+            ydl_opts['format'] = 'bestvideo[height<=720]+bestaudio/best[height<=720]'  # بهینه‌سازی فرمت برای سرعت
             logger.info("Using best video format")
 
         # دانلود با format selector
