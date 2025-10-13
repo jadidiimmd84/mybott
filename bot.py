@@ -935,6 +935,7 @@ def quick_url_detection(url):
 def instagram_login():
     cl = Client()
     try:
+        cl.load_settings("cookies1.txt")
         cl.load_settings("settings.json")
         cl.get_timeline_feed()
         logger.info("✅ اینستاگرام با کوکی‌های قبلی لاگین شد")
