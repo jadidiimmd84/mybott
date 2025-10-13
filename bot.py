@@ -939,7 +939,7 @@ def instagram_login():
         cl.get_timeline_feed()
         logger.info("✅ اینستاگرام با کوکی‌های قبلی لاگین شد")
     except Exception as e:
-        logger.error("❌ کوکی نداری. باید از مرورگر کوکی بگیری (cookies1.txt): %s", e)
+        logger.error("❌ کوکی نداری. باید از مرورگر کوکی بگیری (cookies.txt): %s", e)
     return cl
 
 # تابع پاک کردن کش yt-dlp
@@ -983,7 +983,7 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
         # تنظیمات بهبود یافته base_ydl_opts با headers اضافی برای جلوگیری از 403
         base_ydl_opts = {
             'outtmpl': '%(id)s.%(ext)s', 
-            'cookiefile': 'cookies1.txt' if os.path.exists('cookies1.txt') else None,
+            'cookiefile': 'cookies.txt' if os.path.exists('cookies.txt') else None,
             'geo_bypass_country': 'US',
             'nocheckcertificate': True,
             'retries': 10,
