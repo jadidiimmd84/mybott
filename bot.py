@@ -1001,6 +1001,7 @@ async def process_download(context: ContextTypes.DEFAULT_TYPE):
                 'Upgrade-Insecure-Requests': '1',
             },
             'extractor_retries': 5,
+            'extractor_args': {},
         }
 
         if 'tiktok.com' in user_url.lower():
